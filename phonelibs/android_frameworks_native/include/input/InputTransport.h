@@ -17,6 +17,8 @@
 #ifndef _LIBINPUT_INPUT_TRANSPORT_H
 #define _LIBINPUT_INPUT_TRANSPORT_H
 
+#pragma GCC system_header
+
 /**
  * Native input transport.
  *
@@ -27,21 +29,31 @@
  * The InputConsumer is used by the application to receive events from the input dispatcher.
  */
 
+#include <string>
+
+#include <binder/IBinder.h>
 #include <input/Input.h>
 #include <utils/Errors.h>
 #include <utils/Timers.h>
 #include <utils/RefBase.h>
-#include <utils/String8.h>
 #include <utils/Vector.h>
 #include <utils/BitSet.h>
 
 namespace android {
+class Parcel;
 
 /*
  * Intermediate representation used to send input events and related signals.
  *
  * Note that this structure is used for IPCs so its layout must be identical
  * on 64 and 32 bit processes. This is tested in StructLayout_test.cpp.
+ *
+ * Since the struct must be aligned to an 8-byte boundary, there could be uninitialized bytes
+ * in-between the defined fields. This padding data should be explicitly accounted for by adding
+ * "empty" fields into the struct. This data is memset to zero before sending the struct across
+ * the socket. Adding the explicit fields ensures that the memset is not optimized away by the
+ * compiler. When a new field is added to the struct, the corresponding change
+ * in StructLayout_test should be made.
  */
 struct InputMessage {
     enum {
@@ -62,15 +74,18 @@ struct InputMessage {
     union Body {
         struct Key {
             uint32_t seq;
+            uint32_t empty1;
             nsecs_t eventTime __attribute__((aligned(8)));
             int32_t deviceId;
             int32_t source;
+            int32_t displayId;
             int32_t action;
             int32_t flags;
             int32_t keyCode;
             int32_t scanCode;
             int32_t metaState;
             int32_t repeatCount;
+            uint32_t empty2;
             nsecs_t downTime __attribute__((aligned(8)));
 
             inline size_t size() const {
@@ -80,14 +95,18 @@ struct InputMessage {
 
         struct Motion {
             uint32_t seq;
+            uint32_t empty1;
             nsecs_t eventTime __attribute__((aligned(8)));
             int32_t deviceId;
             int32_t source;
+            int32_t displayId;
             int32_t action;
             int32_t actionButton;
             int32_t flags;
             int32_t metaState;
             int32_t buttonState;
+            MotionClassification classification; // base type: uint8_t
+            uint8_t empty2[3];
             int32_t edgeFlags;
             nsecs_t downTime __attribute__((aligned(8)));
             float xOffset;
@@ -95,6 +114,7 @@ struct InputMessage {
             float xPrecision;
             float yPrecision;
             uint32_t pointerCount;
+            uint32_t empty3;
             // Note that PointerCoords requires 8 byte alignment.
             struct Pointer {
                 PointerProperties properties;
@@ -125,6 +145,7 @@ struct InputMessage {
 
     bool isValid(size_t actualSize) const;
     size_t size() const;
+    void getSanitizedCopy(InputMessage* msg) const;
 };
 
 /*
@@ -140,16 +161,17 @@ protected:
     virtual ~InputChannel();
 
 public:
-    InputChannel(const String8& name, int fd);
+    InputChannel() = default;
+    InputChannel(const std::string& name, int fd);
 
     /* Creates a pair of input channels.
      *
      * Returns OK on success.
      */
-    static status_t openInputChannelPair(const String8& name,
+    static status_t openInputChannelPair(const std::string& name,
             sp<InputChannel>& outServerChannel, sp<InputChannel>& outClientChannel);
 
-    inline String8 getName() const { return mName; }
+    inline std::string getName() const { return mName; }
     inline int getFd() const { return mFd; }
 
     /* Sends a message to the other endpoint.
@@ -180,9 +202,19 @@ public:
     /* Returns a new object that has a duplicate of this channel's fd. */
     sp<InputChannel> dup() const;
 
+    status_t write(Parcel& out) const;
+    status_t read(const Parcel& from);
+
+    sp<IBinder> getToken() const;
+    void setToken(const sp<IBinder>& token);
+
 private:
-    String8 mName;
-    int mFd;
+    void setFd(int fd);
+
+    std::string mName;
+    int mFd = -1;
+
+    sp<IBinder> mToken = nullptr;
 };
 
 /*
@@ -211,6 +243,7 @@ public:
             uint32_t seq,
             int32_t deviceId,
             int32_t source,
+            int32_t displayId,
             int32_t action,
             int32_t flags,
             int32_t keyCode,
@@ -232,12 +265,14 @@ public:
             uint32_t seq,
             int32_t deviceId,
             int32_t source,
+            int32_t displayId,
             int32_t action,
             int32_t actionButton,
             int32_t flags,
             int32_t edgeFlags,
             int32_t metaState,
             int32_t buttonState,
+            MotionClassification classification,
             float xOffset,
             float yOffset,
             float xPrecision,
@@ -303,7 +338,8 @@ public:
      * Other errors probably indicate that the channel is broken.
      */
     status_t consume(InputEventFactoryInterface* factory, bool consumeBatches,
-            nsecs_t frameTime, uint32_t* outSeq, InputEvent** outEvent);
+            nsecs_t frameTime, uint32_t* outSeq, InputEvent** outEvent,
+            int* motionEventType, int* touchMoveNumber, bool* flag);
 
     /* Sends a finished signal to the publisher to inform it that the message
      * with the specified sequence number has finished being process and whether
@@ -341,6 +377,8 @@ public:
     bool hasPendingBatch() const;
 
 private:
+    int mTouchMoveCounter = 0;
+
     // True if touch resampling is enabled.
     const bool mResampleTouch;
 
@@ -367,19 +405,35 @@ private:
         int32_t idToIndex[MAX_POINTER_ID + 1];
         PointerCoords pointers[MAX_POINTERS];
 
-        void initializeFrom(const InputMessage* msg) {
-            eventTime = msg->body.motion.eventTime;
+        void initializeFrom(const InputMessage& msg) {
+            eventTime = msg.body.motion.eventTime;
             idBits.clear();
-            for (uint32_t i = 0; i < msg->body.motion.pointerCount; i++) {
-                uint32_t id = msg->body.motion.pointers[i].properties.id;
+            for (uint32_t i = 0; i < msg.body.motion.pointerCount; i++) {
+                uint32_t id = msg.body.motion.pointers[i].properties.id;
                 idBits.markBit(id);
                 idToIndex[id] = i;
-                pointers[i].copyFrom(msg->body.motion.pointers[i].coords);
+                pointers[i].copyFrom(msg.body.motion.pointers[i].coords);
             }
+        }
+
+        void initializeFrom(const History& other) {
+            eventTime = other.eventTime;
+            idBits = other.idBits; // temporary copy
+            for (size_t i = 0; i < other.idBits.count(); i++) {
+                uint32_t id = idBits.clearFirstMarkedBit();
+                int32_t index = other.idToIndex[id];
+                idToIndex[id] = index;
+                pointers[index].copyFrom(other.pointers[index]);
+            }
+            idBits = other.idBits; // final copy
         }
 
         const PointerCoords& getPointerById(uint32_t id) const {
             return pointers[idToIndex[id]];
+        }
+
+        bool hasPointerId(uint32_t id) const {
+            return idBits.hasBit(id);
         }
     };
     struct TouchState {
@@ -399,7 +453,7 @@ private:
             lastResample.idBits.clear();
         }
 
-        void addHistory(const InputMessage* msg) {
+        void addHistory(const InputMessage& msg) {
             historyCurrent ^= 1;
             if (historySize < 2) {
                 historySize += 1;
@@ -409,6 +463,24 @@ private:
 
         const History* getHistory(size_t index) const {
             return &history[(historyCurrent + index) & 1];
+        }
+
+        bool recentCoordinatesAreIdentical(uint32_t id) const {
+            // Return true if the two most recently received "raw" coordinates are identical
+            if (historySize < 2) {
+                return false;
+            }
+            if (!getHistory(0)->hasPointerId(id) || !getHistory(1)->hasPointerId(id)) {
+                return false;
+            }
+            float currentX = getHistory(0)->getPointerById(id).getX();
+            float currentY = getHistory(0)->getPointerById(id).getY();
+            float previousX = getHistory(1)->getPointerById(id).getX();
+            float previousY = getHistory(1)->getPointerById(id).getY();
+            if (currentX == previousX && currentY == previousY) {
+                return true;
+            }
+            return false;
         }
     };
     Vector<TouchState> mTouchStates;
@@ -424,12 +496,13 @@ private:
     Vector<SeqChain> mSeqChains;
 
     status_t consumeBatch(InputEventFactoryInterface* factory,
-            nsecs_t frameTime, uint32_t* outSeq, InputEvent** outEvent);
+            nsecs_t frameTime, uint32_t* outSeq, InputEvent** outEvent,
+            int* touchMoveNumber);
+
     status_t consumeSamples(InputEventFactoryInterface* factory,
             Batch& batch, size_t count, uint32_t* outSeq, InputEvent** outEvent);
 
-    void updateTouchState(InputMessage* msg);
-    void rewriteMessage(const TouchState& state, InputMessage* msg);
+    void updateTouchState(InputMessage& msg);
     void resampleTouchState(nsecs_t frameTime, MotionEvent* event,
             const InputMessage *next);
 
@@ -438,6 +511,7 @@ private:
 
     status_t sendUnchainedFinishedSignal(uint32_t seq, bool handled);
 
+    static void rewriteMessage(TouchState& state, InputMessage& msg);
     static void initializeKeyEvent(KeyEvent* event, const InputMessage* msg);
     static void initializeMotionEvent(MotionEvent* event, const InputMessage* msg);
     static void addSample(MotionEvent* event, const InputMessage* msg);

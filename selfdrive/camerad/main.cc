@@ -2,7 +2,9 @@
 #include <signal.h>
 #include <cassert>
 
-#if defined(QCOM) && !defined(QCOM_REPLAY)
+#if defined(ANDROID_NDK)
+#include "cameras/camera_android2.h"
+#elif defined(QCOM) && !defined(QCOM_REPLAY)
 #include "cameras/camera_qcom.h"
 #elif QCOM2
 #include "cameras/camera_qcom2.h"

@@ -4,10 +4,14 @@ libs = ['m', 'pthread', common, 'jpeg', 'OpenCL', cereal, messaging, 'czmq', 'zm
 
 if arch == "aarch64":
   libs += ['gsl', 'CB', 'adreno_utils', 'EGL', 'GLESv3', 'cutils', 'ui']
-  if QCOM_REPLAY:
-    cameras = ['cameras/camera_frame_stream.cc']
+  if ANDROID_NDK:
+    libs += ['camera2ndk']
+    cameras = ['cameras/camera_android2.cc']
   else:
-    cameras = ['cameras/camera_qcom.cc']
+    if QCOM_REPLAY:
+      cameras = ['cameras/camera_frame_stream.cc']
+    else:
+      cameras = ['cameras/camera_qcom.cc']
 elif arch == "larch64":
   libs += []
   cameras = ['cameras/camera_qcom2.c']

@@ -21,6 +21,7 @@ typedef struct CameraState {
     int camera_id; // camerad specific
 
     CameraInfo ci;
+    int frame_size;
     Camera2Device *cd; // Camera2NDK assigned device
 
     VisionBuf *camera_bufs;
@@ -49,7 +50,7 @@ typedef struct CameraState {
 struct Camera2Device {
     char *camera_id;
     int32_t orientation;
-    
+
 };
 
 typedef struct DualCameraState {

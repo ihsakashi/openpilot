@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
+#include <assert.h>
 #include <pthread.h>
 
 #include "common/util.h"
@@ -27,7 +28,7 @@ extern volatile sig_atomic_t do_exit;
 #define FORMAT_YUV_420_8888 0x23 // don't intend to use AIMAGE thing
 
 // CAMERA2 Status
-static const char* android_camera2_status_to_string(camera_status_t status) {
+static const char* camera2_status_to_string(camera_status_t status) {
 	if (status == ACAMERA_OK) {
 		return "ACAMERA_OK";
 	} else if (status == ACAMERA_ERROR_BASE) {
@@ -71,9 +72,56 @@ static const char* android_camera2_status_to_string(camera_status_t status) {
  * CAMERA2NDK Implementation
  */
 namespace {
-void camera_open(CameraState *s, VisionBuf *camera_bufs, bool rear) {}
+void camera_open(CameraState *s, VisionBuf *camera_bufs, bool rear) {
+	// NdkCameraDevice.h
+	LOG("opening camera2ndk camera device")
+	camera_status_t camera_status = ACAMERA_OK;
 
-void camera_close(CameraState *s) {}
+	s->deviceStateCallbacks.context = s;
+	s->deviceStateCallbacks.onDisconnected = camera2_device_disconnected;
+	s->deviceStateCallbacks.onError = camera2_device_error;
+
+	if (!s->cd->camera_id) {
+		LOGE("no device selected?")
+	}
+
+	// TODO: setup fps, ae, awb... or no. this will be cleaner and specific in thread
+
+	//now we open stream for device
+	ACameraDevice *cameraDevice;
+	camera_status_t camera_status = ACameraManager_openCamera(s->cameraManager, s->cd->camera_id,
+																&s->deviceStateCallbacks, &cameraDevice);
+	if (camera_status != ACAMERA_OK) {
+		LOGE("failed to open camera %s. error is %s", s->cd->camera_id, camera2_status_to_string(camera_status));
+		return;
+	}
+
+	LOG("camera %s opened!")
+}
+
+static void camera2_device_disconnected(void *context, ACameraDevice *device) {
+	LOGE("camera %s disconnected", ACameraDevice_getId((device));
+	//fixme
+}
+
+static void camera2_device_error(void *context, ACameraDevice *device) {
+	LOGE("camera %s has errored", ACameraDevice_getId((device));
+	//fixme
+}
+
+void camera_close(CameraState *s) {
+	LOG("closing camera");
+
+	if (s->cameraDevice) {
+		camera_status_t camera_status = ACameraDevice_close(s->cameraDevice);
+		if (camera_status != ACAMERA_OK) {
+			LOGE("failed to close camera %s. error is %s", s->cd->camera_id, camera2_status_to_string(camera_status));
+		} else {
+			LOG("camera has closed");
+		}
+		s->cameraDevice = nullptr;
+	}
+}
 
 void camera_detect(CameraState *s, bool rear) {
     LOG("detecting cameras");
@@ -136,7 +184,7 @@ void camera_detect(CameraState *s, bool rear) {
 					break;
 			}
 
-			// fps - it should support 20fps np
+			// fps - it should support 20fps np, as long as we aren't very large res
 			/*ACameraMetadata_const_entry supportedFpsRanges;
 			ACameraMetadata_getConstEntry(cameraMetadata, ACAMERA_CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES, &supportedFpsRanges);
 			for (int i = 0; i < supportedFpsRanges.count; i += 2) {
@@ -144,6 +192,10 @@ void camera_detect(CameraState *s, bool rear) {
 				int32_t max = supportedFpsRanges.data.i32[i + 1];
 				ms_message("[Camera2 Capture] Supported FPS range: [%d-%d]", min, max);
 			}*/
+
+			// always on hdr mode
+			// NOT scene mode hdr! thats for photos and hurts
+			bool hdr = true;
 
 			// formats - YUV only
 			// TODO: add check for others
@@ -172,7 +224,7 @@ void camera_detect(CameraState *s, bool rear) {
 					// check if frame size is there already
 					if (width == askWidth && height == askHeight) {
 						LOG{"scaler res supported"}
-					} else { // we get closest res
+					} else { // we get closest res with aspect ratio
 						return; //lazy
 					}
 				}
@@ -184,7 +236,7 @@ void camera_detect(CameraState *s, bool rear) {
 			bool back_facing = face.data.u8[0] == ACAMERA_LENS_FACING_BACK;
 			std::string facing = std::string(!back_facing ? "front" : "back");
 
-			// out
+			// out camerainfo and camera2device
 			if ((rear) && (supportedHardwareLevel != "limited" || supportedHardwareLevel != "unknown")) {
 				if (back_facing && !back_facing_found) {
 					s->camera_id = CAMERA_ID_A0;
@@ -197,6 +249,8 @@ void camera_detect(CameraState *s, bool rear) {
 				s->cd.orientation = angle;
 				s->ci.frame_width = askWidth;
 				s->ci.frame_height = askHeight;
+				s->ci.frame_stride = askWidth * 3;
+				s->ci.hdr = hdr;
 			}
 
 			// done
@@ -209,7 +263,15 @@ void camera_detect(CameraState *s, bool rear) {
 }
 
 void camera_init(CameraState *s, int camera_id, unsigned int fps) {
+	s->camera_id = camera_id;
 
+	assert(camera_id < ARRAYSIZE(cameras_supported));
+	assert(s->ci.frame_width != 0);
+	s->frame_size = s->ci.frame_height * s->ci.frame_stride;
+
+	s->fps = fps;
+
+	tbuffer_init2(&s->camera_tb, FRAME_BUF_COUNT, "frame", camera_release_buffer, s);
 }
 
 static void* rear_thread(void *arg) {}
@@ -230,9 +292,36 @@ void cameras_init(DualCameraState *s) {
 void camera_autoexposure(CameraState *s, float grey_fac) {}
 
 void cameras_open(DualCameraState *s, VisionBuf *camera_bufs_rear,
-                  VisionBuf *camera_bufs_focus, VisionBuf *camera_bufs_stats,
-                  VisionBuf *camera_bufs_front) {}
+                VisionBuf *camera_bufs_focus, VisionBuf *camera_bufs_stats,
+                VisionBuf *camera_bufs_front) {
+	assert(camera_bufs_rear);
+	assert(camera_bufs_front);
+	int err;
 
-void cameras_close(DualCameraState *s) {}
+	LOG("*** open rear ***");
+	camera_open(&s->rear, camera_bufs_front, true);
 
-void cameras_run(DualCameraState *s) {}
+	LOG("*** open front ***");
+	camera_open(&s->rear, camera_bufs_rear, true);
+}
+
+void cameras_close(DualCameraState *s) {
+  camera_close(&s->rear);
+  camera_close(&s->front);
+}
+
+void cameras_run(DualCameraState *s) {
+  set_thread_name("android_thread");
+
+  int err;
+  pthread_t rear_thread_handle;
+  err = pthread_create(&rear_thread_handle, NULL,
+                        rear_thread, &s->rear);
+  assert(err == 0);
+
+  front_thread(&s->front);
+
+  err = pthread_join(rear_thread_handle, NULL);
+  assert(err == 0);
+  cameras_close(s);
+}

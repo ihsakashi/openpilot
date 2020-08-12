@@ -57,6 +57,7 @@ int spin(int argc, char** argv) {
   }
 
   // spinner
+  
   int fb_w, fb_h;
   FramebufferState *fb = framebuffer_init("spinner", 0x00001000, false,
                                           &fb_w, &fb_h);

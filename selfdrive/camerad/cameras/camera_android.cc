@@ -16,13 +16,50 @@
 #include <opencv2/videoio.hpp>
 #include "common/params.h"
 
+#include <native_window.h>
+#include <camera/NdkCaptureRequest.h>
+#include <camera/NdkCameraCaptureSession.h>
+#include <camera/NdkCameraDevice.h>
+#include <camera/NdkCameraError.h>
+#include <camera/NdkCameraManager.h>
+#include <camera/NdkCameraMetadata.h>
+#include <camera/NdkCameraMetadataTags.h>
+#include <media/NdkImageReader.h>
+
 extern volatile sig_atomic_t do_exit;
-#define FRAME_WIDTH  1164
-#define FRAME_HEIGHT 874
-#define FRAME_WIDTH_FRONT  1152
-#define FRAME_HEIGHT_FRONT 864
+#define FRAME_WIDTH  1440
+#define FRAME_HEIGHT 1080
+
+struct Camera2Device {
+    char *camera_id;
+    int32_t orientation;
+    int32_t fpsmin;
+    int32_t fpsmax;
+    int format;
+};
+
 namespace {
-	
+// TODO: do actions
+static void camera2_device_on_disconnected_error(void* context, ACameraDevice* device) {
+  LOG("Camera(id: %s) is diconnected.\n", ACameraDevice_getId(device));
+}
+static void camera2_device_on_error(void* context, ACameraDevice* device,
+                                int error) {
+  LOGE("Error(code: %d) on Camera(id: %s).\n", error,
+       ACameraDevice_getId(device));
+}
+// Capture Callbacks
+static void camera2_capture_session_on_ready(void* context,
+                                  ACameraCaptureSession* session) {
+  LOG("Session is ready.\n");
+}
+static void camera2_capture_session_on_activated(void* context,
+                                   ACameraCaptureSession* session) {
+  LOG("Session is activated.\n");
+}
+
+
+
 void camera_open(CameraState *s, VisionBuf *camera_bufs, bool rear) {
   printf("open cameras");
   assert(camera_bufs);
@@ -56,6 +93,121 @@ void open_gl_stream_def(CameraState * s, char* camera_id, int width, int height,
   printf(" GL Stream :[%s]\n",*strm_def);
 }
 
+void camera_detect(CameraState *s, int camera_id, bool rear) {
+  printf("detecting cameras");
+
+	ACameraIdList *cameraIdList = nullptr;
+	ACameraMetadata *cameraMetadata = nullptr;
+
+	camera_status_t camera_status = ACAMERA_OK;
+	ACameraManager *cameraManager = ACameraManager_create();
+	s->cameraManager = cameraManager
+
+	camera_status = ACameraManager_getCameraIdList(s->cameraManager, &cameraIdList);
+  ASSERT(camera_status == ACAMERA_OK, "failed to get camera(s) list: %d ", camera_status);
+  ASSERT(cameraIdList->numCameras > 1, "no cameras detected!");
+
+  bool back_found = false;
+  bool front_found = false;
+
+  //bool desired_scaler = false;
+  int desired_width = FRAME_WIDTH;
+  int desired_height = FRAME_HEIGHT;
+
+	const char *camId = nullptr;
+	for (int i = 0; i < cameraIdList->numCameras; i++) { // for each camera
+		camId = cameraIdList->cameraIds[i];
+    LOG("looking at camera %d", camId);
+    // start
+		camera_status = ACameraManager_getCameraCharacteristics(s->cameraManager, camId, &cameraMetadata);
+
+    // face
+    ACameraMetadata_const_entry face;
+    ACameraMetadata_getConstEntry(cameraMetadata, ACAMERA_LENS_FACING, &face);
+    auto facing = static_cast<acamera_metadata_enum_android_lens_facing_t>(face.data.u8[0]);
+    LOG("camera is facing %d", facing)
+    if (back_found || front_found)
+      continue;
+    if ((rear && facing == ACAMERA_LENS_FACING_BACK) || (!rear && facing == ACAMERA_LENS_FACING_BACK)) {
+      s->cd.camera_id;
+      if (facing == ACAMERA_LENS_FACING_BACK) {
+        back_found = true;
+      } else {
+        front_found = true;
+      }
+    }
+  
+    // orientation
+    ACameraMetadata_const_entry orientation;
+    ACameraMetadata_getConstEntry(cameraMetadata, ACAMERA_SENSOR_ORIENTATION, &orientation);
+    int32_t angle = orientation.data.i32[0];
+    LOG("camera angle is %d", angle)
+    s->cd.orientation = angle;
+
+    // hardware support
+    ACameraMetadata_const_entry hardwareLevel;
+    ACameraMetadata_getConstEntry(cameraMetadata, ACAMERAINFO_SUPPORTED_HARDWARE_LEVEL, &hardwareLevel);
+    std::string supportedHardwareLevel = "unknown";
+    switch (hardwareLevel.data.u8[0]) {
+      case ACAMERA_INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED:
+        supportedHardwareLevel = "limited";
+        break;
+      case ACAMERA_INFO_SUPPORTED_HARDWARE_LEVEL_FULL:
+        supportedHardwareLevel = "full";
+        break;
+      case ACAMERA_INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY:
+        supportedHardwareLevel = "legacy";
+        break;
+      case ACAMERA_INFO_SUPPORTED_HARDWARE_LEVEL_3:
+        supportedHardwareLevel = "3";
+        break;
+    }
+
+    // fps
+	  ACameraMetadata_const_entry supportedFpsRanges;
+    ACameraMetadata_getConstEntry(cameraMetadata, ACAMERACONTROL_AE_AVAILABLE_TARGET_FPS_RANGES, &supportedFpsRanges);
+    for (int i = 0; i < supportedFpsRanges.count; i += 2) {
+      int32_t fpsmin = supportedFpsRanges.data.i32[i];
+      int32_t fpsmax = supportedFpsRanges.data.i32[i + 1];
+      LOG("camera supported FPS range: [%d-%d]", fpsmin, fpsmax);
+	  }
+    s->cd.fpsmin = fpsmin
+    s->cd.fpsmax = fpsmax
+
+    // supported format - only yuv for now
+    s->cd.format = AIMAGE_FORMAT_YUV_420_888
+
+    // scaler
+	  ACameraMetadata_const_entry scaler;
+    ACameraMetadata_getConstEntry(cameraMetadata, ACAMERA_SCALER_AVAILABLE_STREAM_CONFIGURATIONS, &scaler);
+    for (int i = 0; i < scaler.count; i += 4) {
+      // We are only interested in output streams, so skip input stream
+      int32_t input = scaler.data.i32[i + 3];
+      if (input)
+          continue;
+      int32_t format = scaler.data.i32[i + 0];
+      if (format == s->cd.format) {
+        int32_t width = scaler.data.i32[i + 1];
+        int32_t height = scaler.data.i32[i + 2];
+        LOG("camera has available size of w %d, h %d for format %d", width, height, format);
+        if (width == desired_width && height == desired_height) {
+          //desired_scaler = true;
+          LOG("desired scaler res found!")
+          s->ci.frame_width = width;
+          s->ci.frame_height = height;
+          s->ci.frame_stride = width * 3;
+          break;
+        }
+      }
+    }
+
+    // done
+    ACameraMetadata_free(cameraMetadata);
+	}
+	ACameraManager_deleteCameraIdList(cameraIdList);
+	//ACameraManager_delete(s->cameraManager);
+}
+
 void camera_init(CameraState *s, int camera_id, unsigned int fps) {
   printf("\n\n\n Init Camera %d\n", camera_id);
   assert(camera_id < ARRAYSIZE(cameras_supported));
@@ -63,7 +215,12 @@ void camera_init(CameraState *s, int camera_id, unsigned int fps) {
   assert(s->ci.frame_width != 0);
    
   s->frame_size = s->ci.frame_height * s->ci.frame_stride;
-  s->fps = fps;
+  if (fps > s->ci->fpsmin && fps > s->ci->fpsmax) {
+    s->fps = fps;
+  } else {
+    s->fps = 20
+  }
+  
   tbuffer_init2(&s->camera_tb, FRAME_BUF_COUNT, "frame", camera_release_buffer, s);
 }
 
@@ -216,6 +373,9 @@ CameraInfo cameras_supported[CAMERA_ID_MAX] = {
 
 void cameras_init(DualCameraState *s) {
   memset(s, 0, sizeof(*s));
+
+  camera_detect(&s->rear, CAMERA_ID_A0, true);
+  camera_detect(&s->front, CAMERA_ID_A1, true);
 
   camera_init(&s->rear, CAMERA_ID_LGC920, 20);
   s->rear.transform = (mat3){{

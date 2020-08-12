@@ -3,13 +3,17 @@
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
-#include <assert.h>
 #include <pthread.h>
 
 #include "common/util.h"
 #include "common/timing.h"
 #include "common/swaglog.h"
 #include "buffering.h"
+
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/videoio.hpp>
 
 #include <camera/NdkCaptureRequest.h>
 #include <camera/NdkCameraCaptureSession.h>
@@ -18,7 +22,7 @@
 #include <camera/NdkCameraManager.h>
 #include <camera/NdkCameraMetadata.h>
 #include <camera/NdkCameraMetadataTags.h>
-
+#include <native_window.h>
 
 extern volatile sig_atomic_t do_exit;
 
@@ -26,6 +30,11 @@ extern volatile sig_atomic_t do_exit;
 #define FRAME_WIDTH  1440
 #define FRAME_HEIGHT 1080
 #define FORMAT_YUV_420_8888 0x23 // don't intend to use AIMAGE thing
+
+struct Camera2Device {
+    char *camera_id;
+    int32_t orientation;
+};
 
 // CAMERA2 Status
 static const char* camera2_status_to_string(camera_status_t status) {
@@ -74,43 +83,50 @@ static const char* camera2_status_to_string(camera_status_t status) {
 namespace {
 void camera_open(CameraState *s, VisionBuf *camera_bufs, bool rear) {
 	// NdkCameraDevice.h
-	LOG("opening camera2ndk camera device")
+	LOG("opening camera2ndk camera device");
 	camera_status_t camera_status = ACAMERA_OK;
 
 	s->deviceStateCallbacks.context = s;
-	s->deviceStateCallbacks.onDisconnected = camera2_device_disconnected;
+	s->deviceStateCallbacks.onDisconnected = camera2_device_disconnected();
 	s->deviceStateCallbacks.onError = camera2_device_error;
 
 	if (!s->cd->camera_id) {
-		LOGE("no device selected?")
+		LOGE("no device selected?");
 	}
-
-	// TODO: setup fps, ae, awb... or no. this will be cleaner and specific in thread
 
 	//now we open stream for device
 	ACameraDevice *cameraDevice;
-	camera_status_t camera_status = ACameraManager_openCamera(s->cameraManager, s->cd->camera_id,
-																&s->deviceStateCallbacks, &cameraDevice);
+	camera_status_t camera_status = ACameraManager_openCamera(s->cameraManager, s->cd->camera_id, &s->deviceStateCallbacks, &cameraDevice);
 	if (camera_status != ACAMERA_OK) {
 		LOGE("failed to open camera %s. error is %s", s->cd->camera_id, camera2_status_to_string(camera_status));
 		return;
 	}
 
-	LOG("camera %s opened!")
+	LOG("camera %s opened!");
+	s->cameraDevice = cameraDevice;
+
+	assert(camera_bufs);
+	s->camera_bufs = camera_bufs;
 }
 
-static void camera2_device_disconnected(void *context, ACameraDevice *device) {
+/*static void camera2_device_disconnected(void *context, ACameraDevice *device) {
 	LOGE("camera %s disconnected", ACameraDevice_getId((device));
+	CameraState *s = (CameraState *)context;
+	camera_close(s)
 	//fixme
-}
+}*/
 
-static void camera2_device_error(void *context, ACameraDevice *device) {
-	LOGE("camera %s has errored", ACameraDevice_getId((device));
+/*static void camera2_device_error(void *context, ACameraDevice *device, int err) {
+	LOGE("camera %s has error %s", ACameraDevice_getId((device), err);
+	CameraState *s = (CameraState *)context;
+	camera_close(s)
 	//fixme
-}
+}*/
 
 void camera_close(CameraState *s) {
 	LOG("closing camera");
+
+	tbuffer_stop(&s->camera_tb);
 
 	if (s->cameraDevice) {
 		camera_status_t camera_status = ACameraDevice_close(s->cameraDevice);
@@ -130,7 +146,8 @@ void camera_detect(CameraState *s, bool rear) {
 	ACameraMetadata *cameraMetadata = nullptr;
 
 	camera_status_t camera_status = ACAMERA_OK;
-	ACameraManager *s->cameraManager = ACameraManager_create();
+	ACameraManager *cameraManager = ACameraManager_create();
+	s->cameraManager = cameraManager
 
 	camera_status = ACameraManager_getCameraIdList(s->cameraManager, &cameraIdList);
 	if (camera_status != ACAMERA_OK) {
@@ -162,7 +179,7 @@ void camera_detect(CameraState *s, bool rear) {
 
 			// orientation
 			ACameraMetadata_const_entry orientation;
-			ACameraMetadata_getConstEntry(cameraMetadata, ACAMERA_SENSOR_ORIENTATION, &orientation)
+			ACameraMetadata_getConstEntry(cameraMetadata, ACAMERA_SENSOR_ORIENTATION, &orientation);
 			int32_t angle = orientation.data.i32[0];
 
 			// hardware support
@@ -201,7 +218,7 @@ void camera_detect(CameraState *s, bool rear) {
 			// TODO: add check for others
 			// you can also create a stream for EON viewport in RGBA888 but would need refactoring
 			// ^ this would be better but YUV fully is better
-			s->format = FORMAT_YUV_420_888
+			s->format = FORMAT_YUV_420_888;
 
 			// available + recommended? scaler
 			ACameraMetadata_const_entry scaler;
@@ -215,7 +232,9 @@ void camera_detect(CameraState *s, bool rear) {
 				int32_t input = entry.data.i32[i + 3];
 				int32_t format = entry.data.i32[i + 3];
 
-				if (input) continue;
+				if (input) {
+					continue;
+				}
 
 				// check format
 				if (format == s->format) {
@@ -223,7 +242,7 @@ void camera_detect(CameraState *s, bool rear) {
 					int32_t height = scaler.data.i32[i + 2];
 					// check if frame size is there already
 					if (width == askWidth && height == askHeight) {
-						LOG{"scaler res supported"}
+						LOG("scaler res supported");
 					} else { // we get closest res with aspect ratio
 						return; //lazy
 					}
@@ -237,8 +256,8 @@ void camera_detect(CameraState *s, bool rear) {
 			std::string facing = std::string(!back_facing ? "front" : "back");
 
 			// out camerainfo and camera2device
-			if ((rear) && (supportedHardwareLevel != "limited" || supportedHardwareLevel != "unknown")) {
-				if (back_facing && !back_facing_found) {
+			if (supportedHardwareLevel != "limited" || supportedHardwareLevel != "unknown") {
+				if (back_facing && !back_facing_found && rear) {
 					s->camera_id = CAMERA_ID_A0;
 					back_facing_found = true;
 				} else {
@@ -252,29 +271,42 @@ void camera_detect(CameraState *s, bool rear) {
 				s->ci.frame_stride = askWidth * 3;
 				s->ci.hdr = hdr;
 			}
-
 			// done
 			ACameraMetadata_free(cameraMetadata);
 		}
 	}
-
-
-
+	ACameraManager_deleteCameraIdList(cameraIdList);
+	//ACameraManager_delete(s->cameraManager);
 }
 
-void camera_init(CameraState *s, int camera_id, unsigned int fps) {
-	s->camera_id = camera_id;
+void camera_release_buffer(void *cookie, int buf_idx) {
+  CameraState *s = static_cast<CameraState *>(cookie);
+}
 
-	assert(camera_id < ARRAYSIZE(cameras_supported));
+void camera_init(CameraState *s, unsigned int fps) {
+	assert(s->camera_id < ARRAYSIZE(cameras_supported));
 	assert(s->ci.frame_width != 0);
 	s->frame_size = s->ci.frame_height * s->ci.frame_stride;
-
 	s->fps = fps;
 
 	tbuffer_init2(&s->camera_tb, FRAME_BUF_COUNT, "frame", camera_release_buffer, s);
 }
 
-static void* rear_thread(void *arg) {}
+static void* rear_thread(void *arg) {
+	int err;
+	
+	set_thread_name("webcam_rear_thread");
+	CameraState* s = (CameraState*)arg;
+
+	if (!s->cameraDevice) {
+		err = 1;
+	}
+
+	uint32_t frame_id = 0;
+	
+
+	while (!do_exit) {}
+}
 
 void front_thread(CameraState *s) {}
 
@@ -284,9 +316,13 @@ void front_thread(CameraState *s) {}
  * CAMERAD specific
  */
 void cameras_init(DualCameraState *s) {
-    // detect avaliable cameras and add
+	memset(s, 0, sizeof(*s));
 
-    //
+	camera_detect(&s->rear, true);
+	camera_detect(&s->front, false);
+
+	camera_init(&s->rear);
+	camera_init(&s->front);
 }
 
 void camera_autoexposure(CameraState *s, float grey_fac) {}

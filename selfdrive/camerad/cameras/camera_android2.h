@@ -47,12 +47,6 @@ typedef struct CameraState {
     ACameraCaptureSession_stateCallbacks captureSessionStateCallbacks;
 } CameraState;
 
-struct Camera2Device {
-    char *camera_id;
-    int32_t orientation;
-
-};
-
 typedef struct DualCameraState {
   int ispif_fd;
 

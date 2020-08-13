@@ -2,6 +2,8 @@
 #include <cstdlib>
 #include <cassert>
 
+#include <window_wrapper.h>
+
 #include <ui/DisplayInfo.h>
 
 #include <gui/ISurfaceComposer.h>
@@ -11,19 +13,15 @@
 
 #include <GLES2/gl2.h>
 #include <EGL/eglext.h>
-
-#define BACKLIGHT_LEVEL 205
+#include <EGLUtils.h>
 
 using namespace android;
 
 struct FramebufferState {
-    sp<SurfaceComposerClient> session;
-    sp<IBinder> dtoken;
-    DisplayInfo dinfo;
-    sp<SurfaceControl> control;
+    sp<WindowSurfaceWrapper> windowSurface;
 
-    sp<Surface> s;
     EGLDisplay display;
+    EGLNativeWindowType window;
 
     EGLint egl_major, egl_minor;
     EGLConfig config;
@@ -36,18 +34,16 @@ extern "C" void framebuffer_swap(FramebufferState *s) {
   assert(glGetError() == GL_NO_ERROR);
 }
 
-extern "C" bool set_brightness(int brightness) {
-  FILE *f = fopen("/sys/class/leds/lcd-backlight/brightness", "wb");
-  if (f != NULL) {
-    fprintf(f, "%d", brightness);
-    fclose(f);
-    return true;
-  }
-  return false;
+extern "C" void framebuffer_swap_layer(FramebufferState *S, int32_t layer) {
+  s->windowSurface->swapLayer(layer);
 }
 
-extern "C" void framebuffer_set_power(FramebufferState *s, int mode) {
-  SurfaceComposerClient::setDisplayPowerMode(s->dtoken, mode);
+extern "C" void framebuffer_show(FramebufferState *s) {
+  s->windowSurface->show();
+}
+
+extern "C" void framebuffer_hide(FramebufferState *s) {
+  s->windowSurface->hide();
 }
 
 extern "C" FramebufferState* framebuffer_init(
@@ -58,40 +54,10 @@ extern "C" FramebufferState* framebuffer_init(
 
   FramebufferState *s = new FramebufferState;
 
-  s->session = new SurfaceComposerClient();
-  assert(s->session != NULL);
+  sp<ProcessState> proc(ProcessState::self());
+  ProcessState::self()->startThreadPool();
 
-  s->dtoken = SurfaceComposerClient::getBuiltInDisplay(
-                ISurfaceComposer::eDisplayIdMain);
-  assert(s->dtoken != NULL);
-
-  status = SurfaceComposerClient::getDisplayInfo(s->dtoken, &s->dinfo);
-  assert(status == 0);
-
-  //int orientation = 3; // rotate framebuffer 270 degrees
-  int orientation = 1; // rotate framebuffer 90 degrees
-  if(orientation == 1 || orientation == 3) {
-      int temp = s->dinfo.h;
-      s->dinfo.h = s->dinfo.w;
-      s->dinfo.w = temp;
-  }
-
-  printf("dinfo %dx%d\n", s->dinfo.w, s->dinfo.h);
-
-  Rect destRect(s->dinfo.w, s->dinfo.h);
-  s->session->setDisplayProjection(s->dtoken, orientation, destRect, destRect);
-
-  s->control = s->session->createSurface(String8(name),
-                  s->dinfo.w, s->dinfo.h, PIXEL_FORMAT_RGBX_8888);
-  assert(s->control != NULL);
-
-  SurfaceComposerClient::openGlobalTransaction();
-  status = s->control->setLayer(layer);
-  SurfaceComposerClient::closeGlobalTransaction();
-  assert(status == 0);
-
-  s->s = s->control->getSurface();
-  assert(s->s != NULL);
+  s->windowSurface = new WindowSurfaceWrapper(String8(name), layer); 
 
   // init opengl and egl
   const EGLint attribs[] = {
@@ -116,11 +82,16 @@ extern "C" FramebufferState* framebuffer_init(
 
   printf("egl version %d.%d\n", s->egl_major, s->egl_minor);
 
-  EGLint num_configs;
-  success = eglChooseConfig(s->display, attribs, &s->config, 1, &num_configs);
-  assert(success);
+  //EGLint num_configs;
+  //success = eglChooseConfig(s->display, attribs, &s->config, 1, &num_configs);
+  //assert(success);
 
-  s->surface = eglCreateWindowSurface(s->display, s->config, s->s.get(), NULL);
+  s->window = s->windowSurface.getSurface().get();
+  success = EGLUtils::selectConfigForNativeWindow(s->display, attribs, s->window, &&s->config);
+  assert(success);
+  printf("EGLUtils::selectConfigForNativeWindow() returned %d", success);
+
+  s->surface = eglCreateWindowSurface(s->display, s->config, s->window, NULL);
   assert(s->surface != EGL_NO_SURFACE);
 
   const EGLint context_attribs[] = {
@@ -140,7 +111,7 @@ extern "C" FramebufferState* framebuffer_init(
 
   printf("gl version %s\n", glGetString(GL_VERSION));
 
-  set_brightness(BACKLIGHT_LEVEL);
+  IPCThreadState::self()->joinThreadPool();
 
   if (out_w) *out_w = w;
   if (out_h) *out_h = h;

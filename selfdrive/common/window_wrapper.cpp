@@ -38,9 +38,10 @@ void WindowSurfaceWrapper::onFirstRef() {
         return;
     }
  
+    // landscape
     uint32_t width, height;
-    if (mainDisplayInfo.orientation != DISPLAY_ORIENTATION_0 &&
-            mainDisplayInfo.orientation != DISPLAY_ORIENTATION_180) {
+    if (mainDisplayInfo.orientation == DISPLAY_ORIENTATION_0 &&
+            mainDisplayInfo.orientation == DISPLAY_ORIENTATION_180) {
         // rotated
         width = mainDisplayInfo.h;
         height = mainDisplayInfo.w;
@@ -71,6 +72,18 @@ void WindowSurfaceWrapper::onFirstRef() {
 void WindowSurfaceWrapper::swapLayer(int32_t layer) {
     SurfaceComposerClient::Transaction{}
             .setLayer(surfaceControl, layer)
+            .apply();
+}
+
+void WindowSurfaceWrapper::hide() {
+    SurfaceComposerClient::Transaction{}
+            .hide()
+            .apply();
+}
+
+void WindowSurfaceWrapper::show() {
+    SurfaceComposerClient::Transaction{}
+            .show()
             .apply();
 }
 

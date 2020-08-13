@@ -15,6 +15,10 @@ public:
     virtual void onFirstRef();
 
     void swapLayer();
+
+    void hide();
+
+    void show();
  
     // Retrieves a handle to the window.
     sp<ANativeWindow>  getSurface() const;

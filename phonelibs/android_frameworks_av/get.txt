@@ -1,0 +1,2 @@
+git clone https://github.com/AOSPA/android_frameworks_av -b quartz --single-branch --depth=1
+685cf32f8e3165d0ff72a3ccbf7dc91c258746a7

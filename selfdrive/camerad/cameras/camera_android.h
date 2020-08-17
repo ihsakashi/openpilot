@@ -19,7 +19,9 @@ typedef struct CameraState {
     int camera_id;
     CameraInfo ci;
     Camera2Device c2d;
+
     int frame_size;
+    int fps;
 
     VisionBuf *camera_bufs;
     FrameMetadata camera_bufs_metadata[FRAME_BUF_COUNT];
@@ -30,10 +32,14 @@ typedef struct CameraState {
     ACameraDevice *cameraDevice;
 
     ACameraCaptureSession *captureSession;
-    ACaptureSessionOutput *sessionCaptureOutput;
+    ACaptureSessionOutput *captureSessionOutput;
     ACaptureSessionOutputContainer *captureSessionOutputContainer;
-    ACaptureOutputTarget *cameraCaptureOutputTarget;
+    ACaptureOutputTarget *captureOutputTarget;
 
+    AImageReader *imageReader;
+    AImageReader_ImageListener *imageReaderListener;
+    ANativeWindow *imageReaderWindow;
+    ACaptureRequest *captureRequest;
 
     ACameraDevice_StateCallbacks deviceStateCallbacks;
     ACameraCaptureSession_stateCallbacks captureSessionStateCallbacks;

@@ -2,7 +2,9 @@
 #include <signal.h>
 #include <cassert>
 
-#if defined(QCOM) && !defined(QCOM_REPLAY)
+#if defined(ANDROID)
+#include "cameras/camera_android.cc"
+#elif defined(QCOM) && !defined(QCOM_REPLAY)
 #include "cameras/camera_qcom.h"
 #elif QCOM2
 #include "cameras/camera_qcom2.h"
@@ -346,7 +348,7 @@ void* processing_thread(void *arg) {
   err = set_realtime_priority(51);
   LOG("setpriority returns %d", err);
 
-#if defined(QCOM) && !defined(QCOM_REPLAY)
+#if defined(QCOM) && !defined(QCOM_REPLAY) && !defined(ANDROID) // no rgb to yuv
   std::unique_ptr<uint8_t[]> rgb_roi_buf = std::make_unique<uint8_t[]>((s->rgb_width/NUM_SEGMENTS_X)*(s->rgb_height/NUM_SEGMENTS_Y)*3);
   std::unique_ptr<int16_t[]> conv_result = std::make_unique<int16_t[]>((s->rgb_width/NUM_SEGMENTS_X)*(s->rgb_height/NUM_SEGMENTS_Y));
 #endif
@@ -413,7 +415,7 @@ void* processing_thread(void *arg) {
 
     visionbuf_sync(&s->rgb_bufs[rgb_idx], VISIONBUF_SYNC_FROM_DEVICE);
 
-#if defined(QCOM) && !defined(QCOM_REPLAY)
+#if defined(QCOM) && !defined(QCOM_REPLAY) && !defined(ANDROID)
     /*FILE *dump_rgb_file = fopen("/tmp/process_dump.rgb", "wb");
     fwrite(s->rgb_bufs[rgb_idx].addr, s->rgb_bufs[rgb_idx].len, sizeof(uint8_t), dump_rgb_file);
     fclose(dump_rgb_file);
@@ -547,7 +549,7 @@ void* processing_thread(void *arg) {
         framed.setLensTruePos(frame_data.lens_true_pos);
         framed.setGainFrac(frame_data.gain_frac);
 
-#if defined(QCOM) && !defined(QCOM_REPLAY)
+#if defined(QCOM) && !defined(QCOM_REPLAY) && !defined(ANDROID)
         kj::ArrayPtr<const int16_t> focus_vals(&s->cameras.rear.focus[0], NUM_FOCUS);
         kj::ArrayPtr<const uint8_t> focus_confs(&s->cameras.rear.confidence[0], NUM_FOCUS);
         framed.setFocusVal(focus_vals);
@@ -558,7 +560,7 @@ void* processing_thread(void *arg) {
 #endif
 
 // TODO: add this back
-#if !defined(QCOM) && !defined(QCOM2)
+#if defined(QCOM) && !defined(QCOM2) && defined(ANDROID)
 //#ifndef QCOM
         framed.setImage(kj::arrayPtr((const uint8_t*)s->yuv_ion[yuv_idx].addr, s->yuv_buf_size));
 #endif

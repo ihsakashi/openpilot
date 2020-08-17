@@ -13,7 +13,9 @@
 #define CAMERA_ID_LGC920 6
 #define CAMERA_ID_LGC615 7
 #define CAMERA_ID_AR0231 8
-#define CAMERA_ID_MAX 9
+#define CAMERA_ID_A0 9
+#define CAMERA_ID_A1 10
+#define CAMERA_ID_MAX 11
 
 #ifdef __cplusplus
 extern "C" {

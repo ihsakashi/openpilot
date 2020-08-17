@@ -4,7 +4,13 @@ libs = ['m', 'pthread', common, 'jpeg', 'OpenCL', cereal, messaging, 'czmq', 'zm
 
 if arch == "aarch64":
   libs += ['gsl', 'CB', 'adreno_utils', 'EGL', 'GLESv3', 'cutils', 'ui']
-  if QCOM_REPLAY:
+  if ANDROID:
+    libs += ['camera2ndk', 'mediandk']
+    cameras = ['cameras/camera_android.cpp']
+    env = env.clone()
+    env.Append(CXXFLAGS = '-DANDROID')
+    env.Append(CFLAGS = '-DANDROID')
+  elif QCOM_REPLAY:
     cameras = ['cameras/camera_frame_stream.cc']
   else:
     cameras = ['cameras/camera_qcom.cc']

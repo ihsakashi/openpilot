@@ -1,2 +1,7 @@
 git clone https://github.com/AOSPA/android_frameworks_native -b quartz --single-branch --depth=1
 9308da94f1b5867eb6927974ed9850a73ff29f71
+
+android_frameworks_native/libs/binder/include/binder
+android_frameworks_native/libs/gui/include/gui
+android_frameworks_native/services/surfaceflinger/layerproto/include/layerproto
+android_frameworks_native/libs/ui/include/ui

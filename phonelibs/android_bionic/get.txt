@@ -1,0 +1,2 @@
+git clone --depth=1 --single-branch --branch=quartz https://github.com/AOSPA/android_bionic
+962d2dbd39f0678d794136e273820924e56a907e

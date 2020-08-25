@@ -1,0 +1,2 @@
+git clone --depth=1 --single-branch --branch=quartz https://github.com/AOSPA/android_system_core
+209f582f8059f119d34dca8ed537ccca67137995

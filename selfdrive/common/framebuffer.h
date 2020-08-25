@@ -12,8 +12,10 @@ FramebufferState* framebuffer_init(
 
 void framebuffer_swap(FramebufferState *s);
 void framebuffer_swap_layer(FramebufferState *s);
-void framebuffer_show();
-void framebuffer_hide();
+void framebuffer_show(FramebufferState *s);
+void framebuffer_hide(FramebufferState *s);
+void framebuffer_set_power(FramebufferState *s, int mode);
+bool set_brightness(int brightness);
 
 #ifdef __cplusplus
 }

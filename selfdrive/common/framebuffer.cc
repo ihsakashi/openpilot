@@ -29,12 +29,18 @@ struct FramebufferState {
     EGLContext context;
 };
 
+extern "C" bool set_brightness(int brightness) {
+  return true;
+}
+
+extern "C" void framebuffer_set_power(FramebufferState *s, int mode) {} // TODO
+
 extern "C" void framebuffer_swap(FramebufferState *s) {
   eglSwapBuffers(s->display, s->surface);
   assert(glGetError() == GL_NO_ERROR);
 }
 
-extern "C" void framebuffer_swap_layer(FramebufferState *S, int32_t layer) {
+extern "C" void framebuffer_swap_layer(FramebufferState *s, int32_t layer) {
   s->windowSurface->swapLayer(layer);
 }
 

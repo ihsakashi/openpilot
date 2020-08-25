@@ -62,6 +62,7 @@ installers/installer_dashcam: $(DASHCAM_OBJS)
 	@echo "[ CXX ] $@"
 	$(CXX) $(CXXFLAGS) -MMD \
            -I$(PHONELIBS)/android_frameworks_native/include \
+           -I$(PHONELIBS)/android_frameworks_native/libs/nativebase/include \
            -I$(PHONELIBS)/android_system_core/include \
            -I$(PHONELIBS)/android_system_core/base/include \
            -I$(PHONELIBS)/android_hardware_libhardware/include \

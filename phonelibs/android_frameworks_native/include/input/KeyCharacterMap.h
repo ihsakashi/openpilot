@@ -19,7 +19,7 @@
 
 #include <stdint.h>
 
-#if HAVE_ANDROID_OS
+#ifdef __ANDROID__
 #include <binder/IBinder.h>
 #endif
 
@@ -27,9 +27,11 @@
 #include <utils/Errors.h>
 #include <utils/KeyedVector.h>
 #include <utils/Tokenizer.h>
-#include <utils/String8.h>
 #include <utils/Unicode.h>
 #include <utils/RefBase.h>
+
+// Maximum number of keys supported by KeyCharacterMaps
+#define MAX_KEYS 8192
 
 namespace android {
 
@@ -48,6 +50,9 @@ public:
         KEYBOARD_TYPE_PREDICTIVE = 2,
         KEYBOARD_TYPE_ALPHA = 3,
         KEYBOARD_TYPE_FULL = 4,
+        /**
+         * Deprecated. Set 'keyboard.specialFunction' to '1' in the device's IDC file instead.
+         */
         KEYBOARD_TYPE_SPECIAL_FUNCTION = 5,
         KEYBOARD_TYPE_OVERLAY = 6,
     };
@@ -69,10 +74,10 @@ public:
     };
 
     /* Loads a key character map from a file. */
-    static status_t load(const String8& filename, Format format, sp<KeyCharacterMap>* outMap);
+    static status_t load(const std::string& filename, Format format, sp<KeyCharacterMap>* outMap);
 
     /* Loads a key character map from its string contents. */
-    static status_t loadContents(const String8& filename,
+    static status_t loadContents(const std::string& filename,
             const char* contents, Format format, sp<KeyCharacterMap>* outMap);
 
     /* Combines a base key character map and an overlay. */
@@ -129,7 +134,7 @@ public:
     void tryRemapKey(int32_t scanCode, int32_t metaState,
             int32_t* outKeyCode, int32_t* outMetaState) const;
 
-#if HAVE_ANDROID_OS
+#ifdef __ANDROID__
     /* Reads a key map from a parcel. */
     static sp<KeyCharacterMap> readFromParcel(Parcel* parcel);
 
@@ -190,7 +195,7 @@ private:
         };
 
         struct Property {
-            inline Property(int32_t property = 0, int32_t metaState = 0) :
+            inline explicit Property(int32_t property = 0, int32_t metaState = 0) :
                     property(property), metaState(metaState) { }
 
             int32_t property;
@@ -215,7 +220,7 @@ private:
         status_t parseKey();
         status_t parseKeyProperty();
         status_t finishKey(Key* key);
-        status_t parseModifier(const String8& token, int32_t* outMetaState);
+        status_t parseModifier(const std::string& token, int32_t* outMetaState);
         status_t parseCharacterLiteral(char16_t* outCharacter);
     };
 

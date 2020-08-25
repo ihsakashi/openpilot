@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <cassert>
 
-#include <window_wrapper.h>
+#include "window_wrapper.h"
 
 #include <ui/DisplayInfo.h>
 

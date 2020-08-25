@@ -1,0 +1,2 @@
+git clone --depth=1 --single-branch --branch=quartz https://github.com/AOSPA/android_hardware_libhardware
+f18bd6b53dbce19264f23062349fe4fb785e00e1

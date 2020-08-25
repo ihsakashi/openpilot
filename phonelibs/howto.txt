@@ -1,0 +1,16 @@
+for android headers:
+git clone --depth=1 --single-branch --branch=quartz ____
+cd ____
+find -regextype posix-egrep -type f -not -regex '.+\.(h|hpp)$' | grep -v -E ".git/" | xargs -n100 rm
+find -type d -empty | xargs --no-run-if-empty -n100 rm -r
+find -type d -empty | xargs --no-run-if-empty -n100 rm -r
+find -type d -empty | xargs --no-run-if-empty -n100 rm -r
+find -type d -empty | xargs --no-run-if-empty -n100 rm -r
+find -type d -empty | xargs --no-run-if-empty -n100 rm -r
+find -type d -empty | xargs --no-run-if-empty -n100 rm -r
+find -type d -empty | xargs --no-run-if-empty -n100 rm -r
+find -type d -empty | xargs --no-run-if-empty -n100 rm -r
+gedit get.txt
+rm -rf .git
+git add ./*
+git commit -m "phonelibs: add ____ headers"

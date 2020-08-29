@@ -4,7 +4,7 @@
 
 //#include <binder/IBinder.h>
 
-#include "window_wrapper.h"
+#include <window_wrapper.h>
 
 #include <GLES2/gl2.h>
 #include <EGL/eglext.h>

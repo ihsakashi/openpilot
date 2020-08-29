@@ -11,7 +11,7 @@ WARN_FLAGS = -Werror=implicit-function-declaration \
              -Werror=format-extra-args
 
 CFLAGS = -std=gnu11 -fPIC -O2 $(WARN_FLAGS)
-CXXFLAGS = -std=c++14 -fPIC -O2 $(WARN_FLAGS)
+CXXFLAGS = -std=c++11 -fPIC -O2 $(WARN_FLAGS)
 
 NANOVG_FLAGS = -I$(PHONELIBS)/nanovg
 
@@ -62,11 +62,8 @@ installers/installer_dashcam: $(DASHCAM_OBJS)
 	@echo "[ CXX ] $@"
 	$(CXX) $(CXXFLAGS) -MMD \
            -I$(PHONELIBS)/android_frameworks_native/include \
-           -I$(PHONELIBS)/android_frameworks_native/libs/nativebase/include \
            -I$(PHONELIBS)/android_system_core/include \
-           -I$(PHONELIBS)/android_system_core/base/include \
            -I$(PHONELIBS)/android_hardware_libhardware/include \
-           -I$(PHONELIBS)/android_bionic/libc/include \
            -c -o '$@' '$<'
 
 ../selfdrive/common/spinner.o: ../selfdrive/common/spinner.c

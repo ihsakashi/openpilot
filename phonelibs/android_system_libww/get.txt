@@ -1,0 +1,2 @@
+git clone --depth=1 --single-branch --branch=master https://github.com/ihsakashi/android_system_libww.git
+NOTE: compile as module in AOSP build directory!

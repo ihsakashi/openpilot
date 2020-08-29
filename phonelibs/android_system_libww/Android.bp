@@ -1,0 +1,17 @@
+cc_library_shared {
+    name: "libww",
+
+    srcs: [
+        "window_wrapper.cpp",
+    ],
+
+    export_include_dirs: ["include"],
+
+    shared_libs: [
+        "liblog",
+        "libbinder",
+        "libui",
+        "libgui",
+        "libutils",
+    ],
+}

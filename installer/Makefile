@@ -17,7 +17,7 @@ NANOVG_FLAGS = -I$(PHONELIBS)/nanovg
 
 OPENGL_LIBS = -lGLESv3
 
-FRAMEBUFFER_LIBS = -lutils -lgui -lEGL
+FRAMEBUFFER_LIBS = -lutils -lgui -lEGL -llibww
 
 COMMON_OBJS = ../selfdrive/common/glutil.o \
        ../selfdrive/common/framebuffer.o \

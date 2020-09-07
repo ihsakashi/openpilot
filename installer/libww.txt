@@ -1,0 +1,63 @@
+
+/system/lib64/libww.so:     file format elf64-littleaarch64
+
+Program Header:
+    PHDR off    0x0000000000000040 vaddr 0x0000000000000040 paddr 0x0000000000000040 align 2**3
+         filesz 0x00000000000001f8 memsz 0x00000000000001f8 flags r--
+    LOAD off    0x0000000000000000 vaddr 0x0000000000000000 paddr 0x0000000000000000 align 2**12
+         filesz 0x0000000000001a6c memsz 0x0000000000001a6c flags r--
+    LOAD off    0x0000000000002000 vaddr 0x0000000000002000 paddr 0x0000000000002000 align 2**12
+         filesz 0x0000000000001120 memsz 0x0000000000001120 flags --x
+    LOAD off    0x0000000000004000 vaddr 0x0000000000004000 paddr 0x0000000000004000 align 2**12
+         filesz 0x0000000000001438 memsz 0x0000000000001438 flags rw-
+ DYNAMIC off    0x00000000000050c8 vaddr 0x00000000000050c8 paddr 0x00000000000050c8 align 2**3
+         filesz 0x0000000000000210 memsz 0x0000000000000210 flags rw-
+   RELRO off    0x0000000000005000 vaddr 0x0000000000005000 paddr 0x0000000000005000 align 2**0
+         filesz 0x0000000000000438 memsz 0x0000000000001000 flags r--
+EH_FRAME off    0x000000000000168c vaddr 0x000000000000168c paddr 0x000000000000168c align 2**2
+         filesz 0x00000000000000bc memsz 0x00000000000000bc flags r--
+   STACK off    0x0000000000000000 vaddr 0x0000000000000000 paddr 0x0000000000000000 align 2**0
+         filesz 0x0000000000000000 memsz 0x0000000000000000 flags rw-
+    NOTE off    0x00000000000015d8 vaddr 0x00000000000015d8 paddr 0x00000000000015d8 align 2**2
+         filesz 0x0000000000000038 memsz 0x0000000000000038 flags r--
+
+Dynamic Section:
+  NEEDED               liblog.so
+  NEEDED               libbinder.so
+  NEEDED               libui.so
+  NEEDED               libgui.so
+  NEEDED               libutils.so
+  NEEDED               libc++.so
+  NEEDED               libc.so
+  NEEDED               libm.so
+  NEEDED               libdl.so
+  SONAME               libww.so
+  FLAGS                0x0000000000000008
+  FLAGS_1              0x0000000000000001
+  0x60000011           0x00000000000011e0
+  0x60000012           0x0000000000000094
+  RELAENT              0x0000000000000018
+  0x6fffe000           0x0000000000001278
+  0x6fffe001           0x0000000000000018
+  0x6fffe003           0x0000000000000008
+  JMPREL               0x0000000000001290
+  PLTRELSZ             0x0000000000000348
+  PLTGOT               0x0000000000005308
+  PLTREL               0x0000000000000007
+  SYMTAB               0x0000000000000238
+  SYMENT               0x0000000000000018
+  STRTAB               0x0000000000000890
+  STRSZ                0x000000000000094a
+  GNU_HASH             0x0000000000000818
+  FINI_ARRAY           0x0000000000005000
+  FINI_ARRAYSZ         0x0000000000000010
+  VERSYM               0x0000000000000778
+  VERNEED              0x00000000000007e8
+  VERNEEDNUM           0x0000000000000001
+
+Version References:
+  required from libc.so:
+    0x00050d63 0x00 02 LIBC
+    0x050d6941 0x00 03 LIBC_Q
+private flags = 0:
+

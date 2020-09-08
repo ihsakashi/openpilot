@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <cassert>
 
-//#include <binder/IBinder.h>
+#include <binder/IBinder.h>
 
 #include <window_wrapper.h>
 

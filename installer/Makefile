@@ -17,7 +17,7 @@ NANOVG_FLAGS = -I$(PHONELIBS)/nanovg
 
 OPENGL_LIBS = -lGLESv3
 
-FRAMEBUFFER_LIBS = -lutils -lgui -lEGL -lww
+FRAMEBUFFER_LIBS = -lutils -lgui -lEGL -lwindoww
 
 COMMON_OBJS = ../selfdrive/common/glutil.o \
        ../selfdrive/common/framebuffer.o \
@@ -61,10 +61,8 @@ installers/installer_dashcam: $(DASHCAM_OBJS)
 ../selfdrive/common/framebuffer.o: ../selfdrive/common/framebuffer.cc
 	@echo "[ CXX ] $@"
 	$(CXX) $(CXXFLAGS) -MMD \
-           -I$(PHONELIBS)/android_frameworks_native/include \
-           -I$(PHONELIBS)/android_system_core/include \
-           -I$(PHONELIBS)/android_hardware_libhardware/include \
-           -lww \
+           -L/system/lib64 \
+           -lwindoww \
            -c -o '$@' '$<'
 
 ../selfdrive/common/spinner.o: ../selfdrive/common/spinner.c

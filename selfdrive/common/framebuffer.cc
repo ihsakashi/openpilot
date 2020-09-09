@@ -2,10 +2,6 @@
 #include <cstdlib>
 #include <cassert>
 
-#include <binder/IBinder.h>
-
-#include <window_wrapper.h>
-
 #include <GLES2/gl2.h>
 #include <EGL/eglext.h>
 #include <EGLUtils.h>
@@ -39,6 +35,10 @@ extern "C" bool set_brightness(int brightness) {
 
 
 extern "C" void framebuffer_set_power(FramebufferState *s, int mode) {}
+
+extern "C" void framebuffer_dl_init(void) {
+
+}
 
 extern "C" FramebufferState* framebuffer_init(
     const char* name, int32_t layer, int alpha,

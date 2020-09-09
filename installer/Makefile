@@ -64,6 +64,7 @@ installers/installer_dashcam: $(DASHCAM_OBJS)
            -L/system/lib64 \
            -lwindoww \
            -lbinder \
+           --dynamic-linker=/system/bin/linker64 \
            -c -o '$@' '$<'
 
 ../selfdrive/common/spinner.o: ../selfdrive/common/spinner.c

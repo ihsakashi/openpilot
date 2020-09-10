@@ -64,6 +64,7 @@ installers/installer_dashcam: $(DASHCAM_OBJS)
           -I$(PHONELIBS)/android_frameworks_native/include \
           -I$(PHONELIBS)/android_system_core/include \
           -I$(PHONELIBS)/android_hardware_libhardware/include \
+          -I$(PHONELIBS)/android_system_libww/include \
           $(PHONELIBS)/libwindoww.a \
            -c -o '$@' '$<'
 

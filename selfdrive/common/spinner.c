@@ -15,7 +15,7 @@
 #include "nanovg_gl.h"
 #include "nanovg_gl_utils.h"
 
-#include "framebuffer.h"
+#include "framebuffer2.h"
 #include "spinner.h"
 
 #define SPINTEXT_LENGTH 128

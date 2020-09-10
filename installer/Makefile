@@ -1,5 +1,5 @@
-CC = clang
-CXX = clang++
+CC = aarch64-linux-android-clang
+CXX = aarch64-linux-android-clang++
 
 
 PHONELIBS = ../phonelibs
@@ -17,10 +17,10 @@ NANOVG_FLAGS = -I$(PHONELIBS)/nanovg
 
 OPENGL_LIBS = -lGLESv3
 
-FRAMEBUFFER_LIBS = -lutils -lgui -lEGL -lwindoww
+FRAMEBUFFER_LIBS = -lutils -lgui -lEGL
 
 COMMON_OBJS = ../selfdrive/common/glutil.o \
-       ../selfdrive/common/framebuffer.o \
+       ../selfdrive/common/framebuffer.a \
        $(PHONELIBS)/nanovg/nanovg.o \
        ../selfdrive/common/spinner.o \
        opensans_semibold.o \
@@ -58,24 +58,11 @@ installers/installer_dashcam: $(DASHCAM_OBJS)
         $(OPENGL_LIBS) \
         -lm -llog
 
-../selfdrive/common/framebuffer.o: ../selfdrive/common/framebuffer.cc
-	@echo "[ CXX ] $@"
-	$(CXX) $(CXXFLAGS) -MMD \
-          -I$(PHONELIBS)/android_frameworks_native/include \
-          -I$(PHONELIBS)/android_frameworks_native/opengl/include \
-          -I$(PHONELIBS)/android_system_core/include \
-          -I$(PHONELIBS)/android_hardware_libhardware/include \
-          -I$(PHONELIBS)/android_system_libww/include \
-          $(PHONELIBS)/libwindoww.a \
-           -c -o '$@' '$<'
-
 ../selfdrive/common/spinner.o: ../selfdrive/common/spinner.c
 	@echo "[ CXX ] $@"
 	$(CXX) $(CXXFLAGS) -MMD \
-          -I$(PHONELIBS)/android_frameworks_native/include \
-          -I$(PHONELIBS)/android_frameworks_native/opengl/include \
-          -I$(PHONELIBS)/android_system_core/include \
-          -I$(PHONELIBS)/android_hardware_libhardware/include \
+          -I$(PHONELIBS)/neos_headers/
+          $(PHONELIBS)/neos/openpilot-framebuffer.a
           $(NANOVG_FLAGS) \
           -c -o '$@' '$<'
 

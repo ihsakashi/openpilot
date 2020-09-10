@@ -61,8 +61,8 @@ installers/installer_dashcam: $(DASHCAM_OBJS)
 ../selfdrive/common/spinner.o: ../selfdrive/common/spinner.c
 	@echo "[ CXX ] $@"
 	$(CXX) $(CXXFLAGS) -MMD \
-          -I$(PHONELIBS)/neos_headers/
-          $(PHONELIBS)/neos/openpilot-framebuffer.a
+          -I$(PHONELIBS)/neos_headers/ \
+          $(PHONELIBS)/neos/openpilot-framebuffer.a \
           $(NANOVG_FLAGS) \
           -c -o '$@' '$<'
 

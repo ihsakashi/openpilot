@@ -24,7 +24,6 @@ a.out
 *.os
 *.os-*
 *.so
-*.a
 *.clb
 *.class
 *.pyxbldc

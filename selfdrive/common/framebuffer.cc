@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <cassert>
 
-#include <dlfcn.h>
+#include <window_wrapper.h>
 
 #include <GLES2/gl2.h>
 #include <EGL/eglext.h>

@@ -20,7 +20,6 @@ OPENGL_LIBS = -lGLESv3
 FRAMEBUFFER_LIBS = -lutils -lgui -lEGL
 
 COMMON_OBJS = ../selfdrive/common/glutil.o \
-       ../selfdrive/common/framebuffer.a \
        $(PHONELIBS)/nanovg/nanovg.o \
        ../selfdrive/common/spinner.o \
        opensans_semibold.o \
@@ -63,6 +62,8 @@ installers/installer_dashcam: $(DASHCAM_OBJS)
 	$(CXX) $(CXXFLAGS) -MMD \
           -I$(PHONELIBS)/neos_headers/ \
           $(PHONELIBS)/neos/openpilot-framebuffer.a \
+          -L/system/lib64/ \
+          -lm -llog -lwindoww -lgui -lEGL -lGLESv3 \
           $(NANOVG_FLAGS) \
           -c -o '$@' '$<'
 

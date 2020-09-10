@@ -61,10 +61,10 @@ installers/installer_dashcam: $(DASHCAM_OBJS)
 ../selfdrive/common/framebuffer.o: ../selfdrive/common/framebuffer.cc
 	@echo "[ CXX ] $@"
 	$(CXX) $(CXXFLAGS) -MMD \
-           -L/system/lib64 \
-           -lwindoww \
-           -lbinder \
-           --dynamic-linker=/system/bin/linker64 \
+          -I$(PHONELIBS)/android_frameworks_native/include \
+          -I$(PHONELIBS)/android_system_core/include \
+          -I$(PHONELIBS)/android_hardware_libhardware/include \
+          libwindoww.a \
            -c -o '$@' '$<'
 
 ../selfdrive/common/spinner.o: ../selfdrive/common/spinner.c

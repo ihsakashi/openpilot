@@ -2,6 +2,8 @@
 #include <cstdlib>
 #include <cassert>
 
+#include <dlfcn.h>
+
 #include <GLES2/gl2.h>
 #include <EGL/eglext.h>
 #include <EGLUtils.h>
@@ -37,7 +39,11 @@ extern "C" bool set_brightness(int brightness) {
 extern "C" void framebuffer_set_power(FramebufferState *s, int mode) {}
 
 extern "C" void framebuffer_dl_init(void) {
-
+  void *dlHandle;
+  void *libpath;
+  
+  libpath = "/system/lib64/libwindoww.so";
+  dlHandle = dlopen(libpath, RTLD_NOW);
 }
 
 extern "C" FramebufferState* framebuffer_init(

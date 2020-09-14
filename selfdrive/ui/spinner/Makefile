@@ -35,6 +35,7 @@ spinner: $(OBJS)
 	$(CXX) -fPIC -o '$@' $^ \
 	      -s \
         $(FRAMEBUFFER_LIBS) \
+        /system/lib64/liblzma.so \
         -L/system/lib64 \
         $(OPENGL_LIBS) \
         -lm -llog
@@ -57,7 +58,6 @@ img_spinner_comma.o: ../../assets/img_spinner_comma.png
           -I../.. \
           $(NANOVG_FLAGS) \
           -I$(PHONELIBS)/neos/include \
-          /system/lib64/liblzma.so \
           -c -o '$@' '$<'
 
 .PHONY: clean

@@ -35,6 +35,7 @@ spinner: $(OBJS)
 	$(CXX) -fPIC -o '$@' $^ \
 	      -s \
         $(FRAMEBUFFER_LIBS) \
+        -I$(PHONELIBS)/neos/include \
         /system/lib64/liblzma.so \
         -L/system/lib64 \
         $(OPENGL_LIBS) \

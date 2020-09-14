@@ -40,6 +40,7 @@ if arch == "aarch64" or arch == "larch64":
 
   cpppath = [
     "#phonelibs/opencl/include",
+    "/data/data/com.termux/files/usr/include"
   ]
 
   libpath = [
@@ -144,9 +145,7 @@ env = Environment(
     "#phonelibs/json11",
     "#phonelibs/curl/include",
     "#phonelibs/libgralloc/include",
-    "#phonelibs/android_frameworks_native/include",
-    "#phonelibs/android_hardware_libhardware/include",
-    "#phonelibs/android_system_core/include",
+    "#phonelibs/neos/include",
     "#phonelibs/linux/include",
     "#phonelibs/snpe/include",
     "#phonelibs/nanovg",

@@ -37,6 +37,7 @@ test: $(OBJS)
 	      $(FRAMEBUFFER_LIBS) \
 	      $(CEREAL_LIBS) \
 	      $(ZMQ_LIBS) \
+        -I$(PHONELIBS)/neos/include \
         /system/lib64/liblzma.so \
         -L/system/lib64 \
         $(OPENGL_LIBS) \

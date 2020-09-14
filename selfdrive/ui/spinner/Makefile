@@ -35,7 +35,6 @@ spinner: $(OBJS)
 	$(CXX) -fPIC -o '$@' $^ \
 	      -s \
         $(FRAMEBUFFER_LIBS) \
-        -I$(PHONELIBS)/neos/include \
         /system/lib64/liblzma.so \
         -L/system/lib64 \
         $(OPENGL_LIBS) \
@@ -57,6 +56,7 @@ img_spinner_comma.o: ../../assets/img_spinner_comma.png
 	@echo "[ CC ] $@"
 	$(CC) $(CFLAGS) -MMD \
           -I../.. \
+          -I$(PHONELIBS)/neos/include \
           $(NANOVG_FLAGS) \
           -c -o '$@' '$<'
 

@@ -37,7 +37,6 @@ test: $(OBJS)
 	      $(FRAMEBUFFER_LIBS) \
 	      $(CEREAL_LIBS) \
 	      $(ZMQ_LIBS) \
-        -I$(PHONELIBS)/neos/include \
         /system/lib64/liblzma.so \
         -L/system/lib64 \
         $(OPENGL_LIBS) \
@@ -53,6 +52,7 @@ test: $(OBJS)
 	@echo "[ CC ] $@"
 	$(CC) $(CFLAGS) -MMD \
           -I.. -I../.. \
+          -I$(PHONELIBS)/neos/include \
           $(NANOVG_FLAGS) \
           $(ZMQ_FLAGS) \
           $(CEREAL_CFLAGS) \

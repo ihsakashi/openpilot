@@ -33,7 +33,6 @@ text: $(OBJS)
 	$(CXX) -fPIC -o '$@' $^ \
 	      -s \
         $(FRAMEBUFFER_LIBS) \
-        -I$(PHONELIBS)/neos/include \
         /system/lib64/liblzma.so \
         -L/system/vendor/lib64 \
         $(OPENGL_LIBS) \
@@ -57,6 +56,7 @@ opensans_regular.o: ../../assets/fonts/opensans_regular.ttf
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) \
            -I../../selfdrive \
            -I../../ \
+           -I$(PHONELIBS)/neos/include \
            $(NANOVG_FLAGS) \
            -c -o '$@' '$<'
 

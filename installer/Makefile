@@ -55,7 +55,6 @@ installers/installer_dashcam: $(DASHCAM_OBJS)
 	$(CXX) -fPIC -o '$@' $^ \
 	      -s \
         $(FRAMEBUFFER_LIBS) \
-        -I$(PHONELIBS)/neos/include \
         /system/lib64/liblzma.so \
         -L/system/lib64 \
         $(OPENGL_LIBS) \
@@ -64,6 +63,7 @@ installers/installer_dashcam: $(DASHCAM_OBJS)
 ../selfdrive/common/spinner.o: ../selfdrive/common/spinner.c
 	@echo "[ CXX ] $@"
 	$(CXX) $(CXXFLAGS) -MMD \
+          -I$(PHONELIBS)/neos/include \
           $(NANOVG_FLAGS) \
           -c -o '$@' '$<'
 

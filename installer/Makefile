@@ -1,5 +1,5 @@
-CC = clang
-CXX = clang++
+CC = aarch64-linux-android-clang
+CXX = aarch64-linux-android-clang++
 
 
 PHONELIBS = ../phonelibs
@@ -45,7 +45,7 @@ installers/installer_openpilot: $(OPENPILOT_OBJS)
 	$(CXX) -fPIC -o '$@' $^ \
 	      -s \
         $(FRAMEBUFFER_LIBS) \
-        -L/system/vendor/lib64 \
+        -L/system/lib64 \
         $(OPENGL_LIBS) \
         -lm -llog
 
@@ -54,7 +54,7 @@ installers/installer_dashcam: $(DASHCAM_OBJS)
 	$(CXX) -fPIC -o '$@' $^ \
 	      -s \
         $(FRAMEBUFFER_LIBS) \
-        -L/system/vendor/lib64 \
+        -L/system/lib64 \
         $(OPENGL_LIBS) \
         -lm -llog
 

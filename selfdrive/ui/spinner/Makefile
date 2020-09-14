@@ -56,6 +56,7 @@ img_spinner_comma.o: ../../assets/img_spinner_comma.png
 	$(CC) $(CFLAGS) -MMD \
           -I../.. \
           $(NANOVG_FLAGS) \
+          -I$(PHONELIBS)/neos/include \
           -c -o '$@' '$<'
 
 .PHONY: clean

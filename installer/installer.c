@@ -16,7 +16,7 @@
 #include "common/util.h"
 #include "common/mat.h"
 #include "common/glutil.h"
-#include "common/framebuffer.h"
+#include <framebuffer2.h>
 #include "common/spinner.h"
 
 #ifndef BRAND

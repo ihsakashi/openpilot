@@ -16,10 +16,9 @@ NANOVG_FLAGS = -I$(PHONELIBS)/nanovg
 
 OPENGL_LIBS = -lGLESv3
 
-FRAMEBUFFER_LIBS = -lutils -lgui -lEGL
+FRAMEBUFFER_LIBS = -lutils -lgui -lEGL -lwindoww -lframebuffer2
 
 OBJS = text.o \
-       ../../common/framebuffer.o \
        ../../../selfdrive/common/touch.o \
        $(PHONELIBS)/nanovg/nanovg.o \
        opensans_regular.o \
@@ -34,6 +33,7 @@ text: $(OBJS)
 	$(CXX) -fPIC -o '$@' $^ \
 	      -s \
         $(FRAMEBUFFER_LIBS) \
+        /system/lib64/liblzma.so \
         -L/system/vendor/lib64 \
         $(OPENGL_LIBS) \
         -lm -llog
@@ -47,9 +47,6 @@ opensans_regular.o: ../../assets/fonts/opensans_regular.ttf
 	@echo "[ CC ] $@"
 	$(CC) $(CPPFLAGS) $(CFLAGS) \
           -I../.. \
-          -I$(PHONELIBS)/android_frameworks_native/include \
-          -I$(PHONELIBS)/android_system_core/include \
-          -I$(PHONELIBS)/android_hardware_libhardware/include \
           $(NANOVG_FLAGS) \
           -c -o '$@' '$<'
 
@@ -59,9 +56,6 @@ opensans_regular.o: ../../assets/fonts/opensans_regular.ttf
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) \
            -I../../selfdrive \
            -I../../ \
-           -I$(PHONELIBS)/android_frameworks_native/include \
-           -I$(PHONELIBS)/android_system_core/include \
-           -I$(PHONELIBS)/android_hardware_libhardware/include \
            $(NANOVG_FLAGS) \
            -c -o '$@' '$<'
 

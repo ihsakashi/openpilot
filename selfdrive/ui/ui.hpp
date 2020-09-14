@@ -22,7 +22,7 @@
 #include "common/mat.h"
 #include "common/visionipc.h"
 #include "common/visionimg.h"
-#include "common/framebuffer.h"
+#include <framebuffer2.h>
 #include "common/modeldata.h"
 #include "common/params.h"
 #include "sound.hpp"

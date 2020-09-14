@@ -17,10 +17,9 @@ NANOVG_FLAGS = -I$(PHONELIBS)/nanovg
 
 OPENGL_LIBS = -lGLESv3
 
-FRAMEBUFFER_LIBS = -lutils -lgui -lEGL
+FRAMEBUFFER_LIBS = -lutils -lgui -lEGL -lwindoww -lframebuffer2
 
 COMMON_OBJS = ../selfdrive/common/glutil.o \
-       ../selfdrive/common/framebuffer.o \
        $(PHONELIBS)/nanovg/nanovg.o \
        ../selfdrive/common/spinner.o \
        opensans_semibold.o \
@@ -45,7 +44,8 @@ installers/installer_openpilot: $(OPENPILOT_OBJS)
 	$(CXX) -fPIC -o '$@' $^ \
 	      -s \
         $(FRAMEBUFFER_LIBS) \
-        -L/system/vendor/lib64 \
+        /system/lib64/liblzma.so \
+        -L/system/lib64 \
         $(OPENGL_LIBS) \
         -lm -llog
 
@@ -54,24 +54,14 @@ installers/installer_dashcam: $(DASHCAM_OBJS)
 	$(CXX) -fPIC -o '$@' $^ \
 	      -s \
         $(FRAMEBUFFER_LIBS) \
-        -L/system/vendor/lib64 \
+        /system/lib64/liblzma.so \
+        -L/system/lib64 \
         $(OPENGL_LIBS) \
         -lm -llog
-
-../selfdrive/common/framebuffer.o: ../selfdrive/common/framebuffer.cc
-	@echo "[ CXX ] $@"
-	$(CXX) $(CXXFLAGS) -MMD \
-           -I$(PHONELIBS)/android_frameworks_native/include \
-           -I$(PHONELIBS)/android_system_core/include \
-           -I$(PHONELIBS)/android_hardware_libhardware/include \
-           -c -o '$@' '$<'
 
 ../selfdrive/common/spinner.o: ../selfdrive/common/spinner.c
 	@echo "[ CXX ] $@"
 	$(CXX) $(CXXFLAGS) -MMD \
-          -I$(PHONELIBS)/android_frameworks_native/include \
-          -I$(PHONELIBS)/android_system_core/include \
-          -I$(PHONELIBS)/android_hardware_libhardware/include \
           $(NANOVG_FLAGS) \
           -c -o '$@' '$<'
 

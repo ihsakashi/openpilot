@@ -16,10 +16,9 @@ NANOVG_FLAGS = -I$(PHONELIBS)/nanovg
 
 OPENGL_LIBS = -lGLESv3
 
-FRAMEBUFFER_LIBS = -lutils -lgui -lEGL
+FRAMEBUFFER_LIBS = -lutils -lgui -lEGL -lwindoww -lframebuffer2
 
 OBJS = spinner.o \
-       ../../common/framebuffer.o \
        $(PHONELIBS)/nanovg/nanovg.o \
        ../../common/spinner.o \
        opensans_semibold.o \
@@ -36,17 +35,10 @@ spinner: $(OBJS)
 	$(CXX) -fPIC -o '$@' $^ \
 	      -s \
         $(FRAMEBUFFER_LIBS) \
-        -L/system/vendor/lib64 \
+        /system/lib64/liblzma.so \
+        -L/system/lib64 \
         $(OPENGL_LIBS) \
         -lm -llog
-
-../../common/framebuffer.o: ../../common/framebuffer.cc
-	@echo "[ CXX ] $@"
-	$(CXX) $(CXXFLAGS) -MMD \
-           -I$(PHONELIBS)/android_frameworks_native/include \
-           -I$(PHONELIBS)/android_system_core/include \
-           -I$(PHONELIBS)/android_hardware_libhardware/include \
-           -c -o '$@' '$<'
 
 opensans_semibold.o: ../../assets/fonts/opensans_semibold.ttf
 	@echo "[ bin2o ] $@"

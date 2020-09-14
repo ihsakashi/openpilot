@@ -28,7 +28,7 @@
 
 #include "json11.hpp"
 
-#include "common/framebuffer.h"
+#include <framebuffer2.h>
 #include "common/touch.h"
 #include "common/utilpp.h"
 

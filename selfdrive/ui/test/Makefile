@@ -22,10 +22,9 @@ JSON_FLAGS = -I$(PHONELIBS)/json/src
 
 OPENGL_LIBS = -lGLESv3
 
-FRAMEBUFFER_LIBS = -lutils -lgui -lEGL
+FRAMEBUFFER_LIBS = -lutils -lgui -lEGL -lwindoww -lframebuffer2
 
 OBJS = test.o \
-       ../../common/framebuffer.o \
        ../../common/touch.o
 
 DEPS := $(OBJS:.o=.d)
@@ -38,8 +37,8 @@ test: $(OBJS)
 	      $(FRAMEBUFFER_LIBS) \
 	      $(CEREAL_LIBS) \
 	      $(ZMQ_LIBS) \
-        -L/system/vendor/lib64 \
-        -lhardware \
+        /system/lib64/liblzma.so \
+        -L/system/lib64 \
         $(OPENGL_LIBS) \
         -lcutils -lm -llog
 
@@ -47,9 +46,6 @@ test: $(OBJS)
 	@echo "[ CXX ] $@"
 	$(CXX) $(CXXFLAGS) -MMD \
            -Iinclude -I.. -I../.. \
-           -I$(PHONELIBS)/android_frameworks_native/include \
-           -I$(PHONELIBS)/android_system_core/include \
-           -I$(PHONELIBS)/android_hardware_libhardware/include \
            -c -o '$@' '$<'
 
 %.o: %.c

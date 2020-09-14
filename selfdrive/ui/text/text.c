@@ -14,7 +14,7 @@
 #include "nanovg_gl.h"
 #include "nanovg_gl_utils.h"
 
-#include "common/framebuffer.h"
+#include <framebuffer2.h>
 #include "common/touch.h"
 
 
@@ -40,8 +40,6 @@ int main(int argc, char** argv) {
 assert(font >= 0);
 
   // Awake
-  framebuffer_set_power(fb, HWC_POWER_MODE_NORMAL);
-  set_brightness(255);
 
   glClearColor(0.1, 0.1, 0.1, 1.0);
   glClear(GL_STENCIL_BUFFER_BIT | GL_COLOR_BUFFER_BIT);

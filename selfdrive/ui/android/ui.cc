@@ -72,14 +72,7 @@ fail:
   return NULL;
 }
 
-static void ui_set_brightness(UIState *s, int brightness) {
-  static int last_brightness = -1;
-  if (last_brightness != brightness && (s->awake || brightness == 0)) {
-    if (set_brightness(brightness)) {
-      last_brightness = brightness;
-    }
-  }
-}
+static void ui_set_brightness(UIState *s, int brightness) {}
 
 int event_processing_enabled = -1;
 static void enable_event_processing(bool yes) {
@@ -103,12 +96,10 @@ static void set_awake(UIState *s, bool awake) {
     // TODO: replace command_awake and command_sleep with direct calls to android
     if (awake) {
       LOGW("awake normal");
-      framebuffer_set_power(s->fb, HWC_POWER_MODE_NORMAL);
       enable_event_processing(true);
     } else {
       LOGW("awake off");
       ui_set_brightness(s, 0);
-      framebuffer_set_power(s->fb, HWC_POWER_MODE_OFF);
       enable_event_processing(false);
     }
   }

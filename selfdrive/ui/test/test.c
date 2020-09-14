@@ -6,7 +6,7 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
-#include "common/framebuffer.h"
+#include <framebuffer2.h>
 #include "common/touch.h"
 
 typedef struct UIState {
@@ -37,11 +37,9 @@ int main() {
   touch_init(&touch);
 
   printf("waiting for touch with screen on\n");
-  framebuffer_set_power(s->fb, HWC_POWER_MODE_NORMAL);
   wait_for_touch();
 
   printf("waiting for touch with screen off\n");
-  framebuffer_set_power(s->fb, HWC_POWER_MODE_OFF);
   wait_for_touch();
   printf("done\n");
 }

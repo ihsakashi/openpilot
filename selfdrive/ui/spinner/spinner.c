@@ -9,7 +9,7 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
-#include "common/framebuffer.h"
+#include <framebuffer.h>
 #include "common/spinner.h"
 
 int main(int argc, char** argv) {

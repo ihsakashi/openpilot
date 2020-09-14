@@ -47,6 +47,7 @@ opensans_regular.o: ../../assets/fonts/opensans_regular.ttf
 	@echo "[ CC ] $@"
 	$(CC) $(CPPFLAGS) $(CFLAGS) \
           -I../.. \
+          -I$(PHONELIBS)/neos/include \
           $(NANOVG_FLAGS) \
           -c -o '$@' '$<'
 

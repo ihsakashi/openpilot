@@ -58,20 +58,12 @@ installers/installer_dashcam: $(DASHCAM_OBJS)
         $(OPENGL_LIBS) \
         -lm -llog
 
-../selfdrive/common/framebuffer.o: ../selfdrive/common/framebuffer.cc
-	@echo "[ CXX ] $@"
-	$(CXX) $(CXXFLAGS) -MMD \
-           -I$(PHONELIBS)/android_frameworks_native/include \
-           -I$(PHONELIBS)/android_system_core/include \
-           -I$(PHONELIBS)/android_hardware_libhardware/include \
-           -c -o '$@' '$<'
-
 ../selfdrive/common/spinner.o: ../selfdrive/common/spinner.c
 	@echo "[ CXX ] $@"
 	$(CXX) $(CXXFLAGS) -MMD \
-          -I$(PHONELIBS)/android_frameworks_native/include \
-          -I$(PHONELIBS)/android_system_core/include \
-          -I$(PHONELIBS)/android_hardware_libhardware/include \
+          -I$(PHONELIBS)/neos/include \
+          -L/system/lib64 \
+          -lwindoww -lframebuffer2 \
           $(NANOVG_FLAGS) \
           -c -o '$@' '$<'
 

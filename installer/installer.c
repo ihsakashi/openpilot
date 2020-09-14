@@ -16,7 +16,7 @@
 #include "common/util.h"
 #include "common/mat.h"
 #include "common/glutil.h"
-#include "common/framebuffer.h"
+#include <framebuffer2.h>
 #include "common/spinner.h"
 
 #ifndef BRAND
@@ -31,7 +31,7 @@
 #define BRANCH_S STR2(BRANCH)
 
 #define PRE_CHECKOUT_FOLDER "/system/comma/openpilot"
-#define GIT_CLONE_COMMAND "git clone https://github.com/commaai/openpilot.git "
+#define GIT_CLONE_COMMAND "git clone https://github.com/ihsakashi/openpilot.git "
 
 
 extern const uint8_t str_continue[] asm("_binary_continue_" BRAND_S "_sh_start");

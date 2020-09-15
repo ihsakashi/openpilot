@@ -44,7 +44,6 @@ installers/installer_openpilot: $(OPENPILOT_OBJS)
 	$(CXX) -fPIC -o '$@' $^ \
 	      -s \
         $(FRAMEBUFFER_LIBS) \
-        -I$(PHONELIBS)/neos/include \
         /system/lib64/liblzma.so \
         -L/system/lib64 \
         $(OPENGL_LIBS) \
@@ -55,7 +54,6 @@ installers/installer_dashcam: $(DASHCAM_OBJS)
 	$(CXX) -fPIC -o '$@' $^ \
 	      -s \
         $(FRAMEBUFFER_LIBS) \
-        -I$(PHONELIBS)/neos/include \
         /system/lib64/liblzma.so \
         -L/system/lib64 \
         $(OPENGL_LIBS) \
@@ -84,6 +82,7 @@ installer_openpilot.o: installer.c
 	@echo "[ CC ] $@"
 	$(CC) $(CFLAGS) -MMD \
           -I.. -I../selfdrive \
+          -I$(PHONELIBS)/neos/include \
           -DBRAND=openpilot \
 					-DBRANCH=release2 \
           -c -o '$@' '$<'
@@ -92,6 +91,7 @@ installer_dashcam.o: installer.c
 	@echo "[ CC ] $@"
 	$(CC) $(CFLAGS) -MMD \
           -I.. -I../selfdrive \
+          -I$(PHONELIBS)/neos/include \
           -DBRAND=dashcam \
 					-DBRANCH=dashcam \
           -c -o '$@' '$<'

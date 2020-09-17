@@ -21,7 +21,6 @@ files = [
 if arch == "aarch64":
   defines = {}
   files += [
-    'framebuffer.cc',
     'touch.c',
   ]
   if QCOM_REPLAY:

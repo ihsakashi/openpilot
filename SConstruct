@@ -70,9 +70,9 @@ if arch == "aarch64" or arch == "larch64":
       cxxflags = ["-DNEOS", "-mcpu=cortex-a57"]
       rpath = ["/system/lib64"]
     else:
-    cflags = ["-DQCOM", "-mcpu=cortex-a57"]
-    cxxflags = ["-DQCOM", "-mcpu=cortex-a57"]
-    rpath = ["/system/vendor/lib64"]
+      cflags = ["-DQCOM", "-mcpu=cortex-a57"]
+      cxxflags = ["-DQCOM", "-mcpu=cortex-a57"]
+      rpath = ["/system/vendor/lib64"]
 
     if QCOM_REPLAY:
       cflags += ["-DQCOM_REPLAY"]
@@ -154,6 +154,7 @@ env = Environment(
     "#phonelibs/linux/include",
     "#phonelibs/snpe/include",
     "#phonelibs/nanovg",
+    "#phonelibs/neos/include",
     "#selfdrive/common",
     "#selfdrive/camerad",
     "#selfdrive/camerad/include",

@@ -182,7 +182,7 @@ env = Environment(
 )
 
 qt_env = None
-if arch in ["x86_64", "Darwin", "larch64"]:
+if arch in ["x86_64", "Darwin", "larch64", "aarch64"]:
   qt_env = env.Clone()
 
   if arch == "Darwin":
@@ -197,6 +197,15 @@ if arch in ["x86_64", "Darwin", "larch64"]:
       QT_BASE + "include/QtMultimedia",
     ]
     qt_env["LINKFLAGS"] += ["-F" + QT_BASE + "lib"]
+  elif arch == "aarch64":
+    qt_dirs = [
+      "/usr/include/qt",
+      "/usr/include/qt/QtWidgets",
+      "/usr/include/qt/QtGui",
+      "/usr/include/qt/QtCore",
+      "/usr/include/qt/QtDBus",
+      "/usr/include/qt/QtMultimedia",
+    ]
   else:
     qt_dirs = [
       f"/usr/include/{real_arch}-linux-gnu/qt5",

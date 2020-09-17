@@ -65,6 +65,11 @@ if arch == "aarch64" or arch == "larch64":
       "#phonelibs/snpe/aarch64",
       "#phonelibs/libyuv/lib"
     ]
+    if os.path.isdir("/apex"):
+      cflags = ["-DNEOS", "-mcpu=cortex-a57"]
+      cxxflags = ["-DNEOS", "-mcpu=cortex-a57"]
+      rpath = ["/system/lib64"]
+    else:
     cflags = ["-DQCOM", "-mcpu=cortex-a57"]
     cxxflags = ["-DQCOM", "-mcpu=cortex-a57"]
     rpath = ["/system/vendor/lib64"]

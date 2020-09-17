@@ -412,6 +412,8 @@ phonelibs/SConscript
 phonelibs/nanovg/*.c
 phonelibs/nanovg/*.h
 
+phonelibs/neos/include/**
+
 phonelibs/libgralloc/**
 phonelibs/linux/**
 phonelibs/opencl/**
@@ -429,10 +431,6 @@ phonelibs/libyuv/lib/**
 
 phonelibs/snpe/include/**
 phonelibs/snpe/aarch64**
-
-phonelibs/android_frameworks_native/**
-phonelibs/android_hardware_libhardware/**
-phonelibs/android_system_core/**
 
 installer/updater/updater
 installer/updater/updater.cc

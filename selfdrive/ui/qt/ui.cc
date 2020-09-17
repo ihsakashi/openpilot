@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
   QApplication a(argc, argv);
 
   MainWindow w;
-#ifdef QCOM2
+#if defined(QCOM2) || defined(NEOS)
   w.showFullScreen();
 #else
   w.setFixedSize(vwp_w, vwp_h);

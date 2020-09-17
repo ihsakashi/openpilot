@@ -28,5 +28,10 @@ else:
   else:
     qt_libs += ["GL"]
 
+  if arch == "aarch64":
+    libs += ['EGL', 'GLESv3', 'framebuffer2', 'windoww', 'log', 'utils', 'gui', 'OpenSLES', 'cutils', 'uuid', 'OpenCL']
+    forcelink = ['/system/lib64/liblzma.so']
+    linkflags = ['-Wl,-rpath=/system/lib64,-rpath=/system/comma/usr/lib']
+
   qt_src = ["qt/ui.cc", "qt/window.cc", "qt/settings.cc", "qt/qt_sound.cc"] + src
-  qt_env.Program("_ui", qt_src, LIBS=qt_libs + libs)
+  qt_env.Program("_ui", qt_src, LINKFLAGS=linkflags, FORCELINK=forcelink, LIBS=qt_libs + libs)

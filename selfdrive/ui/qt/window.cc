@@ -86,6 +86,7 @@ void GLWindow::resizeGL(int w, int h) {
 
 void GLWindow::paintGL() {
   ui_draw(ui_state);
+  framebuffer_swap(ui_state->fb);
 }
 
 void GLWindow::mousePressEvent(QMouseEvent *e) {
@@ -113,9 +114,4 @@ GLuint visionimg_to_gl(const VisionImg *img, EGLImageKHR *pkhr, void **pph) {
 
 void visionimg_destroy_gl(EGLImageKHR khr, void *ph) {
   // empty
-}
-
-FramebufferState* framebuffer_init(const char* name, int32_t layer, int alpha,
-                                   int *out_w, int *out_h) {
-  return (FramebufferState*)1; // not null
 }

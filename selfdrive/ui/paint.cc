@@ -711,7 +711,7 @@ static const mat4 full_to_wide_frame_transform = {{
 
 void ui_nvg_init(UIState *s) {
   // init drawing
-#ifdef QCOM
+#if defined(QCOM) || defined(NEOS) // we passed same properties in libframebuffer2
   // on QCOM, we enable MSAA
   s->vg = nvgCreate(0);
 #else

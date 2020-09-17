@@ -26,7 +26,7 @@ public slots:
 
 };
 
-#ifdef QCOM2
+#ifdef QCOM2 // TODO: size on oneplus6
 const int vwp_w = 2160;
 #else
 const int vwp_w = 1920;

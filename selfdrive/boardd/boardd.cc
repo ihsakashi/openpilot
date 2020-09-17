@@ -391,7 +391,7 @@ void hardware_control_thread() {
   uint16_t prev_fan_speed = 999;
   uint16_t ir_pwr = 0;
   uint16_t prev_ir_pwr = 999;
-#ifdef QCOM
+#if defined(QCOM) || defined(NEOS)
   bool prev_charging_disabled = false;
 #endif
   unsigned int cnt = 0;
@@ -408,7 +408,7 @@ void hardware_control_thread() {
         prev_fan_speed = fan_speed;
       }
 
-#ifdef QCOM
+#if defined(QCOM) || defined(NEOS)
       // Charging mode
       bool charging_disabled = sm["thermal"].getThermal().getChargingDisabled();
       if (charging_disabled != prev_charging_disabled){

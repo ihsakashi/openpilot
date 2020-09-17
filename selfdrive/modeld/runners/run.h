@@ -4,7 +4,7 @@
 #include "runmodel.h"
 #include "snpemodel.h"
 
-#ifdef QCOM
+#if defined(QCOM) || defined(NEOS)
   #define DefaultRunModel SNPEModel
 #else
   #ifdef USE_TF_MODEL

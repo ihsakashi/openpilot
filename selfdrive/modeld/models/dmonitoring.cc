@@ -10,19 +10,19 @@
 #define MODEL_HEIGHT 640
 #define FULL_W 852 // should get these numbers from camerad
 
-#if defined(QCOM) || defined(QCOM2)
+#if defined(QCOM) || defined(QCOM2) || defined(NEOS)
 #define input_lambda(x) (x - 128.f) * 0.0078125f
 #else
 #define input_lambda(x) x // for non SNPE running platforms, assume keras model instead has lambda layer
 #endif
 
 void dmonitoring_init(DMonitoringModelState* s) {
-#if defined(QCOM) || defined(QCOM2)
+#if defined(QCOM) || defined(QCOM2) || defined(NEOS)
   const char* model_path = "../../models/dmonitoring_model_q.dlc";
 #else
   const char* model_path = "../../models/dmonitoring_model.dlc";
 #endif
-#ifdef QCOM2
+#if defined(QCOM2) || defined(NEOS) // TEMP: DSP should be fine on oneplus6
   int runtime = USE_CPU_RUNTIME;
 #else
   int runtime = USE_DSP_RUNTIME;

@@ -13,11 +13,11 @@ common_src = [
 ]
 
 if arch == "aarch64":
-  libs += ['gsl', 'CB', 'gnustl_shared']
-  if not TEST_THNEED:
-    common_src += ["thneed/thneed.cc"]
-    lenv['CFLAGS'].append("-DUSE_THNEED")
-    lenv['CXXFLAGS'].append("-DUSE_THNEED")
+  libs += ['gsl', 'CB', 'c++_shared']
+  #if not TEST_THNEED:
+  #  common_src += ["thneed/thneed.cc"]
+  #  lenv['CFLAGS'].append("-DUSE_THNEED")
+  #  lenv['CXXFLAGS'].append("-DUSE_THNEED")
 elif arch == "larch64":
   libs += ['gsl', 'CB', 'symphony-cpu', 'pthread']
 else:

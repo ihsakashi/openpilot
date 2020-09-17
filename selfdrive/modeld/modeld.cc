@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
   PubMaster pm({"model", "cameraOdometry"});
   SubMaster sm({"pathPlan", "frame"});
 
-#if defined(QCOM) || defined(QCOM2)
+#if defined(QCOM) || defined(QCOM2) || defined(NEOS)
   cl_device_type device_type = CL_DEVICE_TYPE_DEFAULT;
 #else
   cl_device_type device_type = CL_DEVICE_TYPE_CPU;

@@ -101,17 +101,14 @@ EGLClientBuffer visionimg_to_egl(const VisionImg *img, void **pph) {
 
 #endif
 
-#if defined(QCOM) || defined(NEOS)
-GLuint visionimg_to_gl(const VisionImg *img, EGLImageKHR *pkhr, void **pph) {
 #ifdef NEOS
-  // our usage and give it
-  AHardwareBuffer_Desc usage;
+EGLClientBuffer visionimg_to_egl(const VisionImg *img, void **pph /* what is this? */) {
+  int ret;
+  assert((img->size % img->stride) == 0);
+  assert((img->stride % img->bpp) == 0);
 
-  // fill buffer details
-  // check
-  //assert((img->size % img->stride) == 0);
-  //assert((img->stride % img->bpp) == 0);
-  // format
+  // fill our usage
+  AHardwareBuffer_Desc usage;
   if (img->format == VISIONIMG_FORMAT_RGB24) {
     usage.format = AHARDWAREBUFFER_FORMAT_R8G8B8_UNORM;
   } else {
@@ -122,23 +119,28 @@ GLuint visionimg_to_gl(const VisionImg *img, EGLImageKHR *pkhr, void **pph) {
   usage.layers = 1;
   usage.rfu0 = 0;
   usage.rfu1 = 0;
-  usage.stride = img->stride/img->bpp;
+  usage.stride = img->stride;
   // we are passing mainly
   usage.usage = AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE | AHARDWAREBUFFER_USAGE_CPU_WRITE_NEVER;
 
   // create buffer
-  AHardwareBuffer* graphicBuf;
-  AHardwareBuffer_allocate(&usage, &graphicBuf);
+  AHardwareBuffer* buf;
+  ret = AHardwareBuffer_allocate(&usage, &buf);
+  assert(ret == 0);
 
   // actual params
-  AHardwareBuffer_Desc usage1;
-  AHardwareBuffer_describe(graphicBuf, &usage1);
+  AHardwareBuffer usage1;
+  AHardwareBuffer_describe(buf, &usage1);
 
-  // get buffer
-  EGLClientBuffer clientBuf = eglGetNativeClientBufferANDROID(graphicBuf);
-#else
-  EGLClientBuffer clientBuf = visionimg_to_egl(img, pph);
+  // get buffer and return
+  return (EGLClientBuffer) eglGetNativeClientBufferANDROID(buf);
+}
 #endif
+
+#if defined(QCOM) || defined(NEOS)
+GLuint visionimg_to_gl(const VisionImg *img, EGLImageKHR *pkhr, void **pph) {
+
+  EGLClientBuffer clientBuf = visionimg_to_egl(img, pph);
 
   EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
   assert(display != EGL_NO_DISPLAY);

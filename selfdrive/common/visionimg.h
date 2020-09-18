@@ -4,7 +4,7 @@
 #include "common/visionbuf.h"
 #include "common/glutil.h"
 
-#ifdef QCOM
+#if defined(QCOM) || defined(NEOS)
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #undef Status

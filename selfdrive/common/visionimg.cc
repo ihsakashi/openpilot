@@ -119,7 +119,7 @@ GLuint visionimg_to_gl(const VisionImg *img, EGLImageKHR *pkhr, void **pph) {
   }
   usage.height = img->height;
   usage.width = img->width;
-  usage.layer = 1;
+  usage.layers = 1;
   usage.rfu0 = 0;
   usage.rfu1 = 0;
   usage.stride = img->stride/img->bpp;
@@ -137,7 +137,7 @@ GLuint visionimg_to_gl(const VisionImg *img, EGLImageKHR *pkhr, void **pph) {
   // get buffer
   EGLClientBuffer clientBuf = eglGetNativeClientBufferANDROID(graphicBuf);
   #else
-  EGLClientBuffer buf = visionimg_to_egl(img, pph);
+  EGLClientBuffer clientBuf = visionimg_to_egl(img, pph);
   #endif
 
   EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
@@ -145,7 +145,7 @@ GLuint visionimg_to_gl(const VisionImg *img, EGLImageKHR *pkhr, void **pph) {
 
   EGLint img_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
   EGLImageKHR image = eglCreateImageKHR(display, EGL_NO_CONTEXT,
-                                        EGL_NATIVE_BUFFER_ANDROID, buf, img_attrs);
+                                        EGL_NATIVE_BUFFER_ANDROID, clientBuf, img_attrs);
   assert(image != EGL_NO_IMAGE_KHR);
 
   GLuint tex = 0;

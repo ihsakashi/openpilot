@@ -108,7 +108,7 @@ EGLClientBuffer visionimg_to_egl(const VisionImg *img, void **pph /* what is thi
   assert((img->stride % img->bpp) == 0);
 
   // fill our usage
-  AHardwareBuffer_Desc usage;
+  AHardwareBuffer_Desc usage = {};
   if (img->format == VISIONIMG_FORMAT_RGB24) {
     usage.format = AHARDWAREBUFFER_FORMAT_R8G8B8_UNORM;
   } else {
@@ -124,12 +124,12 @@ EGLClientBuffer visionimg_to_egl(const VisionImg *img, void **pph /* what is thi
   usage.usage = AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE | AHARDWAREBUFFER_USAGE_CPU_WRITE_NEVER;
 
   // create buffer
-  AHardwareBuffer* buf;
+  AHardwareBuffer* buf = nullptr;
   ret = AHardwareBuffer_allocate(&usage, &buf);
   assert(ret == 0);
 
   // actual params
-  AHardwareBuffer_Desc usage1;
+  AHardwareBuffer_Desc usage1 = {};
   AHardwareBuffer_describe(buf, &usage1);
 
   // get buffer and return

@@ -21,7 +21,7 @@ else:
   if arch == "Darwin":
     qt_env["FRAMEWORKS"] += ["QtWidgets", "QtGui", "QtCore", "QtDBus", "QtMultimedia"]
   else:
-    qt_libs += ["Qt5Widgets", "Qt5Gui", "Qt5Core", "Qt5DBus", "Qt5Multimedia"]
+    qt_libs += ["Qt5Widgets", "Qt5Gui", "Qt5Core", "Qt5DBus"]
 
   if arch == "larch64":
     qt_libs += ["GLESv2"]
@@ -33,5 +33,5 @@ else:
     forcelink = ['/system/lib64/liblzma.so']
     linkflags = ['-Wl,-rpath=/system/lib64,-rpath=/system/comma/usr/lib']
 
-  qt_src = ["qt/ui.cc", "qt/window.cc", "qt/settings.cc", "qt/qt_sound.cc"] + src
+  qt_src = ["qt/ui.cc", "qt/window.cc", "qt/settings.cc"] + src
   qt_env.Program("_ui", qt_src, LINKFLAGS=linkflags, FORCELINK=forcelink, LIBS=qt_libs + libs)

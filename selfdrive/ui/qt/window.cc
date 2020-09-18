@@ -86,7 +86,6 @@ void GLWindow::resizeGL(int w, int h) {
 
 void GLWindow::paintGL() {
   ui_draw(ui_state);
-  framebuffer_swap(ui_state->fb);
 }
 
 void GLWindow::mousePressEvent(QMouseEvent *e) {

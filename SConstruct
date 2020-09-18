@@ -199,6 +199,7 @@ if arch in ["x86_64", "Darwin", "larch64", "aarch64"]:
     ]
     qt_env["LINKFLAGS"] += ["-F" + QT_BASE + "lib"]
   elif arch == "aarch64":
+    qt_env['QTDIR'] = "/usr/lib/qt"
     qt_dirs = [
       "/usr/include/qt",
       "/usr/include/qt/QtWidgets",

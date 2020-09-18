@@ -1,4 +1,5 @@
 #include <cassert>
+#include <cinttypes>
 
 // GraphicBuffer Private API <= 25
 #ifdef QCOM
@@ -74,7 +75,6 @@ VisionImg visionimg_alloc_rgb24(int width, int height, VisionBuf *out_buf) {
 }
 
 #ifdef QCOM
-
 EGLClientBuffer visionimg_to_egl(const VisionImg *img, void **pph) {
   assert((img->size % img->stride) == 0);
   assert((img->stride % img->bpp) == 0);
@@ -98,7 +98,6 @@ EGLClientBuffer visionimg_to_egl(const VisionImg *img, void **pph) {
   *pph = hnd;
   return (EGLClientBuffer) gb->getNativeBuffer();
 }
-
 #endif
 
 #ifdef NEOS
@@ -117,20 +116,20 @@ EGLClientBuffer visionimg_to_egl(const VisionImg *img, void **pph /* what is thi
   usage.height = img->height;
   usage.width = img->width;
   usage.layers = 1;
-  usage.rfu0 = 0;
-  usage.rfu1 = 0;
   usage.stride = img->stride;
   // we are passing mainly
-  usage.usage = AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE | AHARDWAREBUFFER_USAGE_CPU_WRITE_NEVER;
+  usage.usage = AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE;
 
   // create buffer
-  AHardwareBuffer* buf = nullptr;
+  AHardwareBuffer* buf;
   ret = AHardwareBuffer_allocate(&usage, &buf);
   assert(ret == 0);
+  // control our buffer
+  *pph = ret;
 
   // actual params
-  AHardwareBuffer_Desc usage1 = {};
-  AHardwareBuffer_describe(buf, &usage1);
+  //AHardwareBuffer_Desc usage1 = {};
+  AHardwareBuffer_describe(buf, NULL);
 
   // get buffer and return
   return (EGLClientBuffer) eglGetNativeClientBufferANDROID(buf);
@@ -164,6 +163,8 @@ void visionimg_destroy_gl(EGLImageKHR khr, void *ph) {
   eglDestroyImageKHR(display, khr);
 #ifdef QCOM
   delete (private_handle_t*)ph;
+#elif NEOS
+  AHardwareBuffer_release((AHardwareBuffer*)ph);
 #endif
 }
 

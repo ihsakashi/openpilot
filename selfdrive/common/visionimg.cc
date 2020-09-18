@@ -114,15 +114,15 @@ EGLClientBuffer visionimg_to_egl(const VisionImg *img, void **pph /* what is thi
   } else {
     assert(false);
   }
-  usage.height = img->height;
-  usage.width = img->width;
+  usage.height = static_cast<uint32_t>img.height;
+  usage.width = static_cast<uint32_t>img.width;
   usage.layers = 1;
-  usage.stride = img->stride;
+  usage.stride = static_cast<uint32_t>img.stride;
   // we are passing mainly
   usage.usage = AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE;
 
   // create buffer
-  AHardwareBuffer* buf;
+  AHardwareBuffer* buf = nullptr;
   ret = AHardwareBuffer_allocate(&usage, &buf);
   assert(ret == 0);
   // control our buffer
@@ -169,6 +169,7 @@ void visionimg_destroy_gl(EGLImageKHR khr, void *ph) {
 #elif NEOS
   ret = AHardwareBuffer_release((AHardwareBuffer*)ph); // to release ref of hardwarebuffer
   assert(ret == 0);
+  AHardwareBuffer* ph = nullptr;
 #endif
 }
 

@@ -11,7 +11,7 @@
 
 // HardwareBuffer NDK API >= 26
 #ifdef NEOS
-#include <android/hardware_buffer.h>
+#include "android/hardware_buffer.h"
 #endif
 
 #if defined(QCOM) || defined(NEOS)

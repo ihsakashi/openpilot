@@ -24,7 +24,7 @@ if platform.system() == "Darwin":
 if arch == "aarch64" and not os.path.isdir("/system"):
   arch = "larch64"
 if arch == "aarch64" and os.path.isdir("/apex"):
-  NEOS = true
+  NEOS = True
 
 webcam = bool(ARGUMENTS.get("use_webcam", 0))
 QCOM_REPLAY = arch == "aarch64" and os.getenv("QCOM_REPLAY") is not None

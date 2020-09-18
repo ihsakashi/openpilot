@@ -129,7 +129,7 @@ EGLClientBuffer visionimg_to_egl(const VisionImg *img, void **pph /* what is thi
   assert(ret == 0);
 
   // actual params
-  AHardwareBuffer usage1;
+  AHardwareBuffer_Desc usage1;
   AHardwareBuffer_describe(buf, &usage1);
 
   // get buffer and return

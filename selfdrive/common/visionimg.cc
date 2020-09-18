@@ -10,11 +10,8 @@
 #endif
 
 // HardwareBuffer NDK API >= 26
-#ifdef NEOS
-#include "android/hardware_buffer.h"
-#endif
+#include <android/hardware_buffer.h>
 
-#if defined(QCOM) || defined(NEOS)
 #include <GLES3/gl3.h>
 #define GL_GLEXT_PROTOTYPES
 #include <GLES2/gl2ext.h>
@@ -22,7 +19,6 @@
 #include <EGL/egl.h>
 #define EGL_EGLEXT_PROTOTYPES
 #include <EGL/eglext.h>
-#endif
 
 #include "common/util.h"
 #include "common/visionbuf.h"

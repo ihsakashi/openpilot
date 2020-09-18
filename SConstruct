@@ -199,7 +199,6 @@ if arch in ["x86_64", "Darwin", "larch64", "aarch64"]:
     ]
     qt_env["LINKFLAGS"] += ["-F" + QT_BASE + "lib"]
   elif arch == "aarch64":
-    qt_env['QTDIR'] = "/usr/lib/qt"
     qt_dirs = [
       "/usr/include/qt",
       "/usr/include/qt/QtWidgets",
@@ -222,7 +221,6 @@ if arch in ["x86_64", "Darwin", "larch64", "aarch64"]:
   qt_env['CPPPATH'] += qt_dirs
   qt_flags = [
     "-D_REENTRANT",
-    "-DQT_NO_DEBUG",
     "-DQT_WIDGETS_LIB",
     "-DQT_GUI_LIB",
     "-DQT_CORE_LIB"

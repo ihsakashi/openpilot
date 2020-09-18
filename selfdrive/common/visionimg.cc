@@ -29,10 +29,12 @@
 
 #include "common/visionimg.h"
 
-#ifdef QCOM
 
+#if defined(QCOM) || defined(NEOS)
 using namespace android;
+#endif
 
+#ifdef QCOM
 // from libadreno_utils.so
 extern "C" void compute_aligned_width_and_height(int width,
                                       int height,
@@ -125,7 +127,7 @@ EGLClientBuffer visionimg_to_egl(const VisionImg *img, void **pph /* what is thi
   ret = AHardwareBuffer_allocate(&usage, &buf);
   assert(ret == 0);
   // control our buffer
-  *pph = ret;
+  //*pph = ret;
 
   // actual params
   //AHardwareBuffer_Desc usage1 = {};
@@ -163,9 +165,9 @@ void visionimg_destroy_gl(EGLImageKHR khr, void *ph) {
   eglDestroyImageKHR(display, khr);
 #ifdef QCOM
   delete (private_handle_t*)ph;
-#elif NEOS
-  AHardwareBuffer_release((AHardwareBuffer*)ph);
-#endif
+//#elif NEOS
+//  AHardwareBuffer_release((AHardwareBuffer*)ph);
+//#endif
 }
 
 #endif

@@ -128,7 +128,7 @@ GLuint visionimg_to_gl(const VisionImg *img, EGLImageKHR *pkhr, void **pph) {
 
   // create buffer
   AHardwareBuffer* graphicBuf;
-  AHardwareBuffer_allocate(&usage, &graphicBuf)
+  AHardwareBuffer_allocate(&usage, &graphicBuf);
 
   // actual params
   AHardwareBuffer_Desc usage1;

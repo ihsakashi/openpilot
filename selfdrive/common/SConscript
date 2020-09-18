@@ -27,7 +27,10 @@ if arch == "aarch64":
     files += ['visionbuf_cl.c']
   else:
     files += ['visionbuf_ion.c']
-  _gpu_libs = ['gui', 'adreno_utils']
+  if NEOS:
+    _gpu_libs = ['EGL', 'nativewindow']
+  else:
+    _gpu_libs = ['gui', 'adreno_utils']
 elif arch == "larch64":
   defines = {"CLU_NO_CACHE": None}
   files += [

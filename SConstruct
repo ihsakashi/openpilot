@@ -23,6 +23,8 @@ if platform.system() == "Darwin":
   arch = "Darwin"
 if arch == "aarch64" and not os.path.isdir("/system"):
   arch = "larch64"
+if arch == "aarch64" and os.path.isdir("/apex");
+  NEOS = true
 
 webcam = bool(ARGUMENTS.get("use_webcam", 0))
 QCOM_REPLAY = arch == "aarch64" and os.getenv("QCOM_REPLAY") is not None
@@ -65,7 +67,7 @@ if arch == "aarch64" or arch == "larch64":
       "#phonelibs/snpe/aarch64",
       "#phonelibs/libyuv/lib"
     ]
-    if os.path.isdir("/apex"):
+    if NEOS:
       cflags = ["-DNEOS", "-mcpu=cortex-a57"]
       cxxflags = ["-DNEOS", "-mcpu=cortex-a57"]
       rpath = ["/system/lib64"]

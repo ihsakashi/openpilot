@@ -30,11 +30,10 @@
 #include "common/visionimg.h"
 
 
-#if defined(QCOM) || defined(NEOS)
-using namespace android;
-#endif
-
 #ifdef QCOM
+
+using namespace android;
+
 // from libadreno_utils.so
 extern "C" void compute_aligned_width_and_height(int width,
                                       int height,

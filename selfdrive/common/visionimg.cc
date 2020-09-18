@@ -123,7 +123,7 @@ EGLClientBuffer visionimg_to_egl(const VisionImg *img, void **pph /* what is thi
 
   // DEBUG!
   ret = AHardwareBuffer_isSupported(&usage);
-  printf(ret);
+  assert(ret == 0);
 
   // create buffer
   AHardwareBuffer* buf = nullptr;
@@ -173,7 +173,7 @@ void visionimg_destroy_gl(EGLImageKHR khr, void *ph) {
 #elif NEOS
   ret = AHardwareBuffer_release((AHardwareBuffer*)ph); // to release ref of hardwarebuffer
   assert(ret == 0);
-  (AHardwareBuffer*)ph = nullptr;
+  ph = nullptr;
 #endif
 }
 

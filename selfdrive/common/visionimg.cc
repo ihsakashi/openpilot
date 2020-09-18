@@ -103,7 +103,7 @@ EGLClientBuffer visionimg_to_egl(const VisionImg *img, void **pph) {
 
 #if defined(QCOM) || defined(NEOS)
 GLuint visionimg_to_gl(const VisionImg *img, EGLImageKHR *pkhr, void **pph) {
-  #ifdef NEOS
+#ifdef NEOS
   // our usage and give it
   AHardwareBuffer_Desc usage;
 
@@ -124,7 +124,7 @@ GLuint visionimg_to_gl(const VisionImg *img, EGLImageKHR *pkhr, void **pph) {
   usage.rfu1 = 0;
   usage.stride = img->stride/img->bpp;
   // we are passing mainly
-  usage.usage = AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE || AHARDWAREBUFFER_USAGE_CPU_WRITE_NEVER;
+  usage.usage = AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE | AHARDWAREBUFFER_USAGE_CPU_WRITE_NEVER;
 
   // create buffer
   AHardwareBuffer* graphicBuf;
@@ -136,9 +136,9 @@ GLuint visionimg_to_gl(const VisionImg *img, EGLImageKHR *pkhr, void **pph) {
 
   // get buffer
   EGLClientBuffer clientBuf = eglGetNativeClientBufferANDROID(graphicBuf);
-  #else
+#else
   EGLClientBuffer clientBuf = visionimg_to_egl(img, pph);
-  #endif
+#endif
 
   EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
   assert(display != EGL_NO_DISPLAY);

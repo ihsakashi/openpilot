@@ -100,7 +100,8 @@ void GLWindow::mousePressEvent(QMouseEvent *e) {
   }
 }
 
-
+// inherit ours
+#if !defined(NEOS)
 GLuint visionimg_to_gl(const VisionImg *img, EGLImageKHR *pkhr, void **pph) {
   unsigned int texture;
   glGenTextures(1, &texture);
@@ -114,3 +115,4 @@ GLuint visionimg_to_gl(const VisionImg *img, EGLImageKHR *pkhr, void **pph) {
 void visionimg_destroy_gl(EGLImageKHR khr, void *ph) {
   // empty
 }
+#endif

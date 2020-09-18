@@ -1,11 +1,19 @@
 #include <cassert>
 
+// GraphicBuffer Private API <= 25
 #ifdef QCOM
 #include <system/graphics.h>
 #include <ui/GraphicBuffer.h>
 #include <ui/PixelFormat.h>
 #include <gralloc_priv.h>
+#endif
 
+// HardwareBuffer NDK API >= 26
+#ifdef NEOS
+#include <android/hardware_buffer.h>
+#endif
+
+#if defined(QCOM) || defined(NEOS)
 #include <GLES3/gl3.h>
 #define GL_GLEXT_PROTOTYPES
 #include <GLES2/gl2ext.h>
@@ -13,7 +21,6 @@
 #include <EGL/egl.h>
 #define EGL_EGLEXT_PROTOTYPES
 #include <EGL/eglext.h>
-
 #endif
 
 #include "common/util.h"
@@ -92,9 +99,46 @@ EGLClientBuffer visionimg_to_egl(const VisionImg *img, void **pph) {
   return (EGLClientBuffer) gb->getNativeBuffer();
 }
 
-GLuint visionimg_to_gl(const VisionImg *img, EGLImageKHR *pkhr, void **pph) {
+#endif
 
+#if defined(QCOM) || defined(NEOS)
+GLuint visionimg_to_gl(const VisionImg *img, EGLImageKHR *pkhr, void **pph) {
+  #ifdef NEOS
+  // our usage and give it
+  AHardwareBuffer_Desc usage;
+
+  // fill buffer details
+  // check
+  //assert((img->size % img->stride) == 0);
+  //assert((img->stride % img->bpp) == 0);
+  // format
+  if (img->format == VISIONIMG_FORMAT_RGB24) {
+    usage.format = AHARDWAREBUFFER_FORMAT_R8G8B8_UNORM;
+  } else {
+    assert(false);
+  }
+  usage.height = img->height;
+  usage.width = img->width;
+  usage.layer = 1;
+  usage.rfu0 = 0;
+  usage.rfu1 = 0;
+  usage.stride = img->stride/img->bpp;
+  // we are passing mainly
+  usage.usage = AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE || AHARDWAREBUFFER_USAGE_CPU_WRITE_NEVER;
+
+  // create buffer
+  AHardwareBuffer* graphicBuf;
+  AHardwareBuffer_allocate(&usage, &graphicBuf)
+
+  // actual params
+  AHardwareBuffer_Desc usage1;
+  AHardwareBuffer_describe(graphicBuf, &usage1);
+
+  // get buffer
+  EGLClientBuffer clientBuf = eglGetNativeClientBufferANDROID(graphicBuf);
+  #else
   EGLClientBuffer buf = visionimg_to_egl(img, pph);
+  #endif
 
   EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
   assert(display != EGL_NO_DISPLAY);
@@ -116,7 +160,9 @@ void visionimg_destroy_gl(EGLImageKHR khr, void *ph) {
   EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
   assert(display != EGL_NO_DISPLAY);
   eglDestroyImageKHR(display, khr);
+#ifdef QCOM
   delete (private_handle_t*)ph;
+#endif
 }
 
 #endif

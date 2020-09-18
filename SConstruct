@@ -23,7 +23,7 @@ if platform.system() == "Darwin":
   arch = "Darwin"
 if arch == "aarch64" and not os.path.isdir("/system"):
   arch = "larch64"
-if arch == "aarch64" and os.path.isdir("/apex");
+if arch == "aarch64" and os.path.isdir("/apex"):
   NEOS = true
 
 webcam = bool(ARGUMENTS.get("use_webcam", 0))

@@ -127,7 +127,7 @@ EGLClientBuffer visionimg_to_egl(const VisionImg *img, void **pph /* what is thi
   ret = AHardwareBuffer_allocate(&usage, &buf);
   assert(ret == 0);
   // control our buffer
-  //*pph = ret;
+  *pph = buf;
 
   // actual params
   //AHardwareBuffer_Desc usage1 = {};
@@ -160,14 +160,17 @@ GLuint visionimg_to_gl(const VisionImg *img, EGLImageKHR *pkhr, void **pph) {
 }
 
 void visionimg_destroy_gl(EGLImageKHR khr, void *ph) {
+  int ret;
+
   EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
   assert(display != EGL_NO_DISPLAY);
   eglDestroyImageKHR(display, khr);
 #ifdef QCOM
   delete (private_handle_t*)ph;
-//#elif NEOS
-//  AHardwareBuffer_release((AHardwareBuffer*)ph);
-//#endif
+#elif NEOS
+  ret = AHardwareBuffer_release((AHardwareBuffer*)ph); // to release ref of hardwarebuffer
+  assert(ret == 0);
+#endif
 }
 
 #endif

@@ -1,4 +1,8 @@
 #include <cassert>
+#include <cstring>
+#include <cinttypes>
+
+#include <unistd.h>
 
 // GraphicBuffer Private API <= 25
 #ifdef QCOM

@@ -92,7 +92,7 @@ hwbuf_handle* hardwarebuffer_alloc(int width, int height, int stride, int format
     .stride = static_cast<uint32_t>(stride),
     .rfu0 = static_cast<uint32_t>(0),
     .rfu1 = static_cast<uint64_t>(0).
-  };
+  }
 
   // create buffer and give usage
   AHardwareBuffer* buf = nullptr;

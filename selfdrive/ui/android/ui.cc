@@ -108,7 +108,7 @@ static void update_offroad_layout_state(UIState *s, PubMaster *pm) {
 }
 
 int main(int argc, char* argv[]) {
-  int err;
+  //int err;
   setpriority(PRIO_PROCESS, 0, -14);
 
   signal(SIGINT, (sighandler_t)set_do_exit);

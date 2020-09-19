@@ -108,13 +108,12 @@ EGLClientBuffer visionimg_to_egl(const VisionImg *img, void **pph /* what is thi
   assert((img->size % img->stride) == 0);
   assert((img->stride % img->bpp) == 0);
 
+  // check format
+  assert(img->format == VISIONIMG_FORMAT_RGB24);
+
   // fill our usage
   AHardwareBuffer_Desc usage = {};
-  if (img->format == VISIONIMG_FORMAT_RGB24) {
-    usage.format = AHARDWAREBUFFER_FORMAT_R8G8B8_UNORM;
-  } else {
-    assert(false);
-  }
+  usage.format = AHARDWAREBUFFER_FORMAT_R8G8B8_UNORM;
   usage.height = static_cast<uint32_t>(img->height);
   usage.width = static_cast<uint32_t>(img->width);
   usage.layers = 1;

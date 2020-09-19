@@ -97,7 +97,7 @@ hwbuf_handle* hardwarebuffer_alloc(int width, int height, int stride, int format
   // create buffer and give usage
   AHardwareBuffer* buf = nullptr;
   ret = AHardwareBuffer_allocate(&usage, &buf);
-  assert(ret == 0, "Failed to make buffer");
+  assert(ret == 0);
 
   // return the ref we made
   return reinterpret_cast<hnd*>(buf);
@@ -175,7 +175,7 @@ void visionimg_destroy_gl(EGLImageKHR khr, void *ph) {
   int ret;
   AHardwareBuffer* buf = reinterpret_cast<AHardwareBuffer*>(ph);
   ret = AHardwareBuffer_release(buf);
-  assert(ret == 0, "Failed to release buffer");
+  assert(ret == 0);
   buf = nullptr;
 #else
   delete (private_handle_t*)ph;

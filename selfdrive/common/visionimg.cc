@@ -83,7 +83,7 @@ hwbuf_handle* hardwarebuffer_alloc(int width, int height, int stride, int format
   int ret;
 
   // our usage
-  AHardwareBuffer_Desc usage = {
+  AHardwareBuffer_Desc desc = {
     .height = height,
     .width = width,
     .layers = 1,
@@ -96,7 +96,7 @@ hwbuf_handle* hardwarebuffer_alloc(int width, int height, int stride, int format
 
   // create buffer and give usage
   AHardwareBuffer* buf = nullptr;
-  ret = AHardwareBuffer_allocate(&usage, &buf);
+  ret = AHardwareBuffer_allocate(&desc, &buf);
   assert(ret == 0);
 
   // return the ref we made
@@ -172,10 +172,8 @@ void visionimg_destroy_gl(EGLImageKHR khr, void *ph) {
   assert(display != EGL_NO_DISPLAY);
   eglDestroyImageKHR(display, khr);
 #ifdef NEOS
-  int ret;
   AHardwareBuffer* buf = reinterpret_cast<AHardwareBuffer*>(ph);
-  ret = AHardwareBuffer_release(buf);
-  assert(ret == 0);
+  AHardwareBuffer_release(buf);
   buf = nullptr;
 #else
   delete (private_handle_t*)ph;

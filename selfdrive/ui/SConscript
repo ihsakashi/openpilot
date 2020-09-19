@@ -5,7 +5,7 @@ libs = [common, 'zmq', 'czmq', 'capnp', 'kj', 'm', cereal, messaging, gpucommon,
 
 
 if qt_env is None:
-  libs += ['EGL', 'GLESv3', 'gnustl_shared', 'log', 'utils', 'gui', 'hardware', 'ui', 'CB', 'gsl', 'adreno_utils', 'OpenSLES', 'cutils', 'uuid', 'OpenCL']
+  libs += ['EGL', 'GLESv3', 'c++_shared', 'log', 'utils', 'gui', 'hardware', 'ui', 'CB', 'gsl', 'adreno_utils', 'OpenSLES', 'cutils', 'uuid', 'OpenCL']
   forcelink = ['/system/lib64/liblzma.so']
   linkflags = ['-Wl,-rpath=/system/lib64,-rpath=/system/comma/usr/lib']
 

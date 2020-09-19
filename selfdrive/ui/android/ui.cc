@@ -14,9 +14,9 @@
 #include "android/sl_sound.hpp"
 
 // Includes for light sensor
-#include <cutils/properties.h>
-#include <hardware/sensors.h>
-#include <utils/Timers.h>
+//#include <cutils/properties.h>
+//#include <hardware/sensors.h>
+//#include <utils/Timers.h>
 
 volatile sig_atomic_t do_exit = 0;
 static void set_do_exit(int sig) {
@@ -25,50 +25,6 @@ static void set_do_exit(int sig) {
 
 
 static void* light_sensor_thread(void *args) {
-  set_thread_name("light_sensor");
-
-  int err;
-  UIState *s = (UIState*)args;
-  s->light_sensor = 0.0;
-
-  struct sensors_poll_device_t* device;
-  struct sensors_module_t* module;
-
-  hw_get_module(SENSORS_HARDWARE_MODULE_ID, (hw_module_t const**)&module);
-  sensors_open(&module->common, &device);
-
-  // need to do this
-  struct sensor_t const* list;
-  module->get_sensors_list(module, &list);
-
-  int SENSOR_LIGHT = 7;
-
-  err = device->activate(device, SENSOR_LIGHT, 0);
-  if (err != 0) goto fail;
-  err = device->activate(device, SENSOR_LIGHT, 1);
-  if (err != 0) goto fail;
-
-  device->setDelay(device, SENSOR_LIGHT, ms2ns(100));
-
-  while (!do_exit) {
-    static const size_t numEvents = 1;
-    sensors_event_t buffer[numEvents];
-
-    int n = device->poll(device, buffer, numEvents);
-    if (n < 0) {
-      LOG_100("light_sensor_poll failed: %d", n);
-    }
-    if (n > 0) {
-      s->light_sensor = buffer[0].light;
-    }
-  }
-  sensors_close(device);
-  return NULL;
-
-fail:
-  LOGE("LIGHT SENSOR IS MISSING");
-  s->light_sensor = 255;
-
   return NULL;
 }
 
@@ -167,10 +123,10 @@ int main(int argc, char* argv[]) {
   enable_event_processing(true);
 
   PubMaster *pm = new PubMaster({"offroadLayout"});
-  pthread_t light_sensor_thread_handle;
-  err = pthread_create(&light_sensor_thread_handle, NULL,
-                       light_sensor_thread, s);
-  assert(err == 0);
+  //pthread_t light_sensor_thread_handle;
+  //err = pthread_create(&light_sensor_thread_handle, NULL,
+  //                     light_sensor_thread, s);
+  //assert(err == 0);
 
   TouchState touch = {0};
   touch_init(&touch);
@@ -248,8 +204,8 @@ int main(int argc, char* argv[]) {
 
   set_awake(s, true);
 
-  err = pthread_join(light_sensor_thread_handle, NULL);
-  assert(err == 0);
+  //err = pthread_join(light_sensor_thread_handle, NULL);
+  //assert(err == 0);
   delete s->sm;
   delete pm;
   return 0;

@@ -185,7 +185,7 @@ env = Environment(
 )
 
 qt_env = None
-if arch in ["x86_64", "Darwin", "larch64", "aarch64"]:
+if arch in ["x86_64", "Darwin", "larch64"]:
   qt_env = env.Clone()
 
   if arch == "Darwin":

@@ -27,6 +27,8 @@ typedef struct VisionImg {
   size_t size;
 } VisionImg;
 
+typedef void hwbuf_handle;
+
 void visionimg_compute_aligned_width_and_height(int width, int height, int *aligned_w, int *aligned_h);
 VisionImg visionimg_alloc_rgb24(int width, int height, VisionBuf *out_buf);
 

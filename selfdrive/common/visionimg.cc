@@ -1,8 +1,4 @@
 #include <cassert>
-#include <cinttypes>
-#include <cstring>
-
-#include <unistd.h>
 
 // GraphicBuffer Private API <= 25
 #ifdef QCOM
@@ -25,13 +21,13 @@
 #include <EGL/egl.h>
 #define EGL_EGLEXT_PROTOTYPES
 #include <EGL/eglext.h>
+
 #endif
 
 #include "common/util.h"
 #include "common/visionbuf.h"
 
 #include "common/visionimg.h"
-
 
 #ifdef QCOM
 
@@ -78,12 +74,55 @@ VisionImg visionimg_alloc_rgb24(int width, int height, VisionBuf *out_buf) {
   };
 }
 
-#ifdef QCOM
+#ifdef NEOS
+hwbuf_handle* hardwarebuffer_alloc(int width, int height, int stride, int format, int usage) {
+  int ret;
+
+  // our usage
+  AHardwareBuffer_Desc usage = {
+    .height = height,
+    .width = width,
+    .layers = 1,
+    .format = format,
+    .usage = usage,
+    .stride = stride,
+    .rfu0 = 0,
+    .rfu1 = 0.
+  };
+
+  // create buffer and give usage
+  AHardwareBuffer* buf = nullptr;
+  ret = AHardwareBuffer_allocate(&usage, &buf);
+  assert(ret == 0, "Failed to make buffer");
+
+  // return the ref we made
+  return reinterpret_cast<hnd*>(buf);
+}
+#endif
+
+#if defined(QCOM) || defined(NEOS)
+
 EGLClientBuffer visionimg_to_egl(const VisionImg *img, void **pph) {
   assert((img->size % img->stride) == 0);
   assert((img->stride % img->bpp) == 0);
 
   int format = 0;
+#ifdef NEOS
+  if (img->format == VISIONIMG_FORMAT_RGB24) {
+    format = AHARDWAREBUFFER_FORMAT_R8G8B8_UNORM;
+  } else {
+    assert(false);
+  }
+
+  hwbuf_handle *hnd = hardwarebuffer_alloc(img->width, img->height,
+                        img->stride, format, AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE);
+
+  *pph = hnd;
+
+  AHardwareBuffer* buf = reinterpret_cast<AHardwareBuffer*>(hnd);
+
+  return (EGLClientBuffer) eglGetNativeClientBufferANDROID(buf);
+#else
   if (img->format == VISIONIMG_FORMAT_RGB24) {
     format = HAL_PIXEL_FORMAT_RGB_888;
   } else {
@@ -101,59 +140,19 @@ EGLClientBuffer visionimg_to_egl(const VisionImg *img, void **pph) {
   // GraphicBuffer is ref counted by EGLClientBuffer(ANativeWindowBuffer), no need and not possible to release.
   *pph = hnd;
   return (EGLClientBuffer) gb->getNativeBuffer();
-}
 #endif
-
-#ifdef NEOS
-EGLClientBuffer visionimg_to_egl(const VisionImg *img, void **pph /* what is this? */) {
-  int ret;
-  assert((img->size % img->stride) == 0);
-  assert((img->stride % img->bpp) == 0);
-
-  // check format
-  assert(img->format == VISIONIMG_FORMAT_RGB24);
-
-  // fill our usage
-  AHardwareBuffer_Desc usage = {};
-  usage.format = AHARDWAREBUFFER_FORMAT_R8G8B8_UNORM;
-  usage.height = static_cast<uint32_t>(img->height);
-  usage.width = static_cast<uint32_t>(img->width);
-  usage.layers = 1;
-  usage.stride = static_cast<uint32_t>(img->stride);
-  // we are passing mainly
-  usage.usage = AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE;
-
-  // DEBUG!
-  ret = AHardwareBuffer_isSupported(&usage);
-  assert(ret == 0);
-
-  // create buffer
-  AHardwareBuffer* buf = nullptr;
-  ret = AHardwareBuffer_allocate(&usage, &buf);
-  assert(ret == 0);
-  // control our buffer
-  *pph = buf;
-
-  // actual params
-  //AHardwareBuffer_Desc usage1 = {};
-  AHardwareBuffer_describe(buf, NULL);
-
-  // get buffer and return
-  return (EGLClientBuffer) eglGetNativeClientBufferANDROID(buf);
 }
-#endif
 
-#if defined(QCOM) || defined(NEOS)
 GLuint visionimg_to_gl(const VisionImg *img, EGLImageKHR *pkhr, void **pph) {
 
-  EGLClientBuffer clientBuf = visionimg_to_egl(img, pph);
+  EGLClientBuffer buf = visionimg_to_egl(img, pph);
 
   EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
   assert(display != EGL_NO_DISPLAY);
 
   EGLint img_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
   EGLImageKHR image = eglCreateImageKHR(display, EGL_NO_CONTEXT,
-                                        EGL_NATIVE_BUFFER_ANDROID, clientBuf, img_attrs);
+                                        EGL_NATIVE_BUFFER_ANDROID, buf, img_attrs);
   assert(image != EGL_NO_IMAGE_KHR);
 
   GLuint tex = 0;
@@ -165,17 +164,17 @@ GLuint visionimg_to_gl(const VisionImg *img, EGLImageKHR *pkhr, void **pph) {
 }
 
 void visionimg_destroy_gl(EGLImageKHR khr, void *ph) {
-  int ret;
-
   EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
   assert(display != EGL_NO_DISPLAY);
   eglDestroyImageKHR(display, khr);
-#ifdef QCOM
+#ifdef NEOS
+  int ret;
+  AHardwareBuffer* buf = reinterpret_cast<AHardwareBuffer*>(ph);
+  ret = AHardwareBuffer_release(buf);
+  assert(ret == 0, "Failed to release buffer");
+  buf = nullptr;
+#else
   delete (private_handle_t*)ph;
-#elif NEOS
-  ret = AHardwareBuffer_release((AHardwareBuffer*)ph); // to release ref of hardwarebuffer
-  assert(ret == 0);
-  ph = nullptr;
 #endif
 }
 

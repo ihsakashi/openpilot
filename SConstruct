@@ -138,7 +138,6 @@ env = Environment(
     "-fPIC",
     "-O2",
     "-Wunused",
-    "-Werror",
     "-Wno-deprecated-register",
     "-Wno-inconsistent-missing-override",
   ] + cflags + ccflags_asan,

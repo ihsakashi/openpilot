@@ -100,7 +100,7 @@ hwbuf_handle* hardwarebuffer_alloc(int width, int height, int stride, int format
   assert(ret == 0);
 
   // return the ref we made
-  return reinterpret_cast<hnd*>(buf);
+  return reinterpret_cast<hwbuf_handle*>(buf);
 }
 #endif
 

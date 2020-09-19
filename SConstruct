@@ -68,8 +68,8 @@ if arch == "aarch64" or arch == "larch64":
       "#phonelibs/libyuv/lib"
     ]
     if NEOS:
-      cflags = ["-DNEOS", "-mcpu=cortex-a57"]
-      cxxflags = ["-DNEOS", "-mcpu=cortex-a57"]
+      cflags = ["-DNEOS", "-mcpu=cortex-a57", "--target=aarch64-linux-android29"]
+      cxxflags = ["-DNEOS", "-mcpu=cortex-a57", "--target=aarch64-linux-android29"]
       rpath = ["/system/lib64"]
     else:
       cflags = ["-DQCOM", "-mcpu=cortex-a57"]

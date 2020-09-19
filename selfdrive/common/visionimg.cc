@@ -2,6 +2,8 @@
 #include <cinttypes>
 #include <cstring>
 
+#include <unistd.h>
+
 // GraphicBuffer Private API <= 25
 #ifdef QCOM
 #include <system/graphics.h>

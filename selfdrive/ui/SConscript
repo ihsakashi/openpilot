@@ -10,7 +10,7 @@ if qt_env is None:
   forcelink = ['/system/lib64/liblzma.so']
   linkflags = ['-Wl,-rpath=/system/lib64,-rpath=/system/comma/usr/lib']
 
-  src += ["android/ui.cc", "android/sl_sound.cc"]
+  src += ["android/ui.cc"]
   env.Program('_ui', src,
     LINKFLAGS=linkflags,
     FORCELINK=forcelink,

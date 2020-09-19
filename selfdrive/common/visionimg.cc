@@ -84,8 +84,8 @@ hwbuf_handle* hardwarebuffer_alloc(int width, int height, int stride, int format
 
   // our usage
   AHardwareBuffer_Desc desc = {
-    .height = static_cast<uint32_t>(height),
     .width = static_cast<uint32_t>(width),
+    .height = static_cast<uint32_t>(height),
     .layers = static_cast<uint32_t>(1),
     .format = static_cast<uint32_t>(format),
     .usage = static_cast<uint64_t>(usage),

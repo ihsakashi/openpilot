@@ -73,8 +73,8 @@ VisionImg visionimg_alloc_rgb24(int width, int height, VisionBuf *out_buf) {
     .width = width,
     .height = height,
     .stride = stride,
-    .size = size,
     .bpp = 3,
+    .size = size,
   };
 }
 

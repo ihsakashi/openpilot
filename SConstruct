@@ -63,6 +63,7 @@ if arch == "aarch64" or arch == "larch64":
     rpath = ["/usr/local/lib"]
   elif NEOS:
     libpath += [
+      "#phonelibs/neos/include",
       "#phonelibs/snpe/neos/aarch64",
       "#phonelibs/libyuv/lib",
       "/system/lib64",

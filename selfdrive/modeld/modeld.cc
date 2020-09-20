@@ -92,9 +92,9 @@ int main(int argc, char **argv) {
   int err;
   set_realtime_priority(51);
 
-#ifdef QCOM
+#if QCOM
   set_core_affinity(2);
-#elif QCOM2
+#else
   // CPU usage is much lower when pinned to a single big core
   set_core_affinity(4);
 #endif
@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
   PubMaster pm({"model", "cameraOdometry"});
   SubMaster sm({"pathPlan", "frame"});
 
-#if defined(QCOM) || defined(QCOM2)
+#if defined(QCOM) || defined(QCOM2) || defined(NEOS)
   cl_device_type device_type = CL_DEVICE_TYPE_DEFAULT;
 #else
   cl_device_type device_type = CL_DEVICE_TYPE_CPU;

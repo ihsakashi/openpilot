@@ -64,7 +64,7 @@ if arch == "aarch64" or arch == "larch64":
   elif NEOS:
     libpath += [
       "#phonelibs/neos/include",
-      "#phonelibs/snpe/neos/aarch64",
+      "#phonelibs/snpe/neos",
       "#phonelibs/libyuv/lib",
       "/system/lib64",
       "/vendor/lib64"

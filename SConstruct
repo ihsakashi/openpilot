@@ -23,6 +23,9 @@ if platform.system() == "Darwin":
   arch = "Darwin"
 if arch == "aarch64" and not os.path.isdir("/system"):
   arch = "larch64"
+elif arch == "aarch64" and os.path.isdir("/apex"):
+  NEOS = true
+Export('NEOS')
 
 webcam = bool(ARGUMENTS.get("use_webcam", 0))
 QCOM_REPLAY = arch == "aarch64" and os.getenv("QCOM_REPLAY") is not None
@@ -45,7 +48,6 @@ if arch == "aarch64" or arch == "larch64":
   libpath = [
     "/usr/lib",
     "/data/data/com.termux/files/usr/lib",
-    "/system/vendor/lib64",
     "/system/comma/usr/lib",
     "#phonelibs/nanovg",
   ]
@@ -59,10 +61,25 @@ if arch == "aarch64" or arch == "larch64":
     cflags = ["-DQCOM2", "-mcpu=cortex-a57"]
     cxxflags = ["-DQCOM2", "-mcpu=cortex-a57"]
     rpath = ["/usr/local/lib"]
+  elif NEOS:
+    libpath += [
+      "#phonelibs/snpe/neos/aarch64",
+      "#phonelibs/libyuv/lib",
+      "/system/lib64",
+      "/vendor/lib64"
+    ]
+    cflags = ["-DNEOS", "--target=aarch64-linux-android29"]
+    cxxflags = ["-DNEOS", "--target=aarch64-linux-android29"]
+    rpath = ["/system/lib64"]
   else:
     libpath += [
       "#phonelibs/snpe/aarch64",
-      "#phonelibs/libyuv/lib"
+      "#phonelibs/libyuv/lib",
+      "#phonelibs/libgralloc/include",
+      "#phonelibs/android_frameworks_native/include",
+      "#phonelibs/android_hardware_libhardware/include",
+      "#phonelibs/android_system_core/include",
+      "/system/vendor/lib64"
     ]
     cflags = ["-DQCOM", "-mcpu=cortex-a57"]
     cxxflags = ["-DQCOM", "-mcpu=cortex-a57"]
@@ -130,7 +147,7 @@ env = Environment(
     "-fPIC",
     "-O2",
     "-Wunused",
-    "-Werror",
+    #"-Werror", TEMP: New toolchain is whiny
     "-Wno-deprecated-register",
     "-Wno-inconsistent-missing-override",
   ] + cflags + ccflags_asan,
@@ -143,10 +160,6 @@ env = Environment(
     "#phonelibs/openmax/include",
     "#phonelibs/json11",
     "#phonelibs/curl/include",
-    "#phonelibs/libgralloc/include",
-    "#phonelibs/android_frameworks_native/include",
-    "#phonelibs/android_hardware_libhardware/include",
-    "#phonelibs/android_system_core/include",
     "#phonelibs/linux/include",
     "#phonelibs/snpe/include",
     "#phonelibs/nanovg",
@@ -162,8 +175,12 @@ env = Environment(
     "#opendbc/can",
   ],
 
-  CC='clang',
-  CXX='clang++',
+  if NEOS:
+    CC='aarch64-linux-android-clang'
+    CXX='aarch64-linux-android-clang++'
+  else:
+    CC='clang',
+    CXX='clang++',
   LINKFLAGS=ldflags_asan,
 
   RPATH=rpath,
@@ -215,15 +232,19 @@ if arch in ["x86_64", "Darwin", "larch64"]:
   qt_env['CXXFLAGS'] += qt_flags
 
 if os.environ.get('SCONS_CACHE'):
-  cache_dir = '/tmp/scons_cache'
+  if NEOS:
+    base = '/data/data/com.termux/files/tmp/'
+  else:
+    base = '/tmp/'
+  cache_dir = base + 'scons_cache'
 
   if os.getenv('CI'):
     branch = os.getenv('GIT_BRANCH')
 
     if QCOM_REPLAY:
-      cache_dir = '/tmp/scons_cache_qcom_replay'
+      cache_dir = base + 'scons_cache_qcom_replay'
     elif branch is not None and branch != 'master':
-      cache_dir_branch = '/tmp/scons_cache_' + branch
+      cache_dir_branch = base + 'scons_cache_' + branch
       if not os.path.isdir(cache_dir_branch) and os.path.isdir(cache_dir):
         shutil.copytree(cache_dir, cache_dir_branch)
       cache_dir = cache_dir_branch

@@ -1,11 +1,11 @@
-Import('env', 'arch', 'cereal', 'messaging', 'common', 'visionipc')
+Import('env', 'arch', 'cereal', 'messaging', 'common', 'visionipc', 'NEOS')
 
 src = ['loggerd.cc', 'logger.cc']
 libs = ['zmq', 'czmq', 'capnp', 'kj', 'z',
   'avformat', 'avcodec', 'swscale', 'avutil',
   'yuv', 'bz2', common, cereal, messaging, visionipc]
 
-if arch == "aarch64":
+if arch == "aarch64" and not NEOS:
   src += ['encoder.c', 'raw_logger.cc']
   libs += ['OmxVenc', 'OmxCore', 'cutils']
 elif arch == "larch64":

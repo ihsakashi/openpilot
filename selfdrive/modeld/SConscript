@@ -1,4 +1,4 @@
-Import('env', 'arch', 'cereal', 'messaging', 'common', 'gpucommon', 'visionipc')
+Import('env', 'arch', 'cereal', 'messaging', 'common', 'gpucommon', 'visionipc', 'NEOS')
 lenv = env.Clone()
 
 libs = [cereal, messaging, common, 'OpenCL', 'SNPE', 'capnp', 'zmq', 'kj', 'yuv', gpucommon, visionipc]
@@ -13,8 +13,12 @@ common_src = [
 ]
 
 if arch == "aarch64":
-  libs += ['gsl', 'CB', 'gnustl_shared']
-  if not TEST_THNEED:
+  if NEOS:
+    libs += ['gsl', 'CB', 'c++_shared']
+  else:
+    libs += ['gsl', 'CB', 'gnustl_shared']
+
+  if not TEST_THNEED and not NEOS:
     common_src += ["thneed/thneed.cc"]
     lenv['CFLAGS'].append("-DUSE_THNEED")
     lenv['CXXFLAGS'].append("-DUSE_THNEED")

@@ -1,4 +1,4 @@
-Import('env', 'arch', 'SHARED', 'QCOM_REPLAY')
+Import('env', 'arch', 'SHARED', 'QCOM_REPLAY', 'NEOS')
 
 if SHARED:
   fxn = env.SharedLibrary
@@ -20,15 +20,21 @@ files = [
 
 if arch == "aarch64":
   defines = {}
-  files += [
-    'framebuffer.cc',
-    'touch.c',
-  ]
+  if NEOS:
+    files += [
+      'touch.c',
+    ]
+    _gpu_libs = ['nativewindow']
+  else:
+    files += [
+      'framebuffer.cc',
+      'touch.c',
+    ]
+    _gpu_libs = ['gui', 'adreno_utils']
   if QCOM_REPLAY:
     files += ['visionbuf_cl.c']
   else:
     files += ['visionbuf_ion.c']
-  _gpu_libs = ['gui', 'adreno_utils']
 elif arch == "larch64":
   defines = {"CLU_NO_CACHE": None}
   files += [

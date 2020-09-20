@@ -28,7 +28,7 @@ T* null_coalesce(T* a, T* b) {
 
 static const char* default_params_path = null_coalesce(const_cast<const char*>(getenv("PARAMS_PATH")), "/data/params");
 
-#ifdef QCOM
+#if defined(QCOM) || defined(NEOS)
 static const char* persistent_params_path = null_coalesce(const_cast<const char*>(getenv("PERSISTENT_PARAMS_PATH")), "/persist/comma/params");
 #else
 static const char* persistent_params_path = default_params_path;

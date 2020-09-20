@@ -1,11 +1,23 @@
 #include <cassert>
+#include <cstring>
+#include <cinttypes>
 
+#include <unistd.h>
+
+// GraphicBuffer Private API <= 25
 #ifdef QCOM
 #include <system/graphics.h>
 #include <ui/GraphicBuffer.h>
 #include <ui/PixelFormat.h>
 #include <gralloc_priv.h>
+#endif
 
+// HardwareBuffer NDK API >= 26
+#ifdef NEOS
+#include <android/hardware_buffer.h>
+#endif
+
+#if defined(QCOM) || defined(NEOS)
 #include <GLES3/gl3.h>
 #define GL_GLEXT_PROTOTYPES
 #include <GLES2/gl2ext.h>
@@ -61,18 +73,60 @@ VisionImg visionimg_alloc_rgb24(int width, int height, VisionBuf *out_buf) {
     .width = width,
     .height = height,
     .stride = stride,
-    .size = size,
     .bpp = 3,
+    .size = size,
   };
 }
 
-#ifdef QCOM
+#ifdef NEOS
+hwbuf_handle* hardwarebuffer_alloc(int width, int height, int stride, int format, int usage) {
+  int ret;
+
+  // our usage
+  AHardwareBuffer_Desc desc = {
+    .width = static_cast<uint32_t>(width),
+    .height = static_cast<uint32_t>(height),
+    .layers = static_cast<uint32_t>(1),
+    .format = static_cast<uint32_t>(format),
+    .usage = static_cast<uint64_t>(usage),
+    .stride = static_cast<uint32_t>(stride),
+    .rfu0 = static_cast<uint32_t>(0),
+    .rfu1 = static_cast<uint64_t>(0),
+  };
+
+  // create buffer and give usage
+  AHardwareBuffer* buf = nullptr;
+  ret = AHardwareBuffer_allocate(&desc, &buf);
+  assert(ret == 0);
+
+  // return the ref we made
+  return reinterpret_cast<hwbuf_handle*>(buf);
+}
+#endif
+
+#if defined(QCOM) || defined(NEOS)
 
 EGLClientBuffer visionimg_to_egl(const VisionImg *img, void **pph) {
   assert((img->size % img->stride) == 0);
   assert((img->stride % img->bpp) == 0);
 
   int format = 0;
+#ifdef NEOS
+  if (img->format == VISIONIMG_FORMAT_RGB24) {
+    format = AHARDWAREBUFFER_FORMAT_R8G8B8_UNORM;
+  } else {
+    assert(false);
+  }
+
+  hwbuf_handle *hnd = hardwarebuffer_alloc(img->width, img->height,
+                        img->stride, format, AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE);
+
+  *pph = hnd;
+
+  AHardwareBuffer* buf = reinterpret_cast<AHardwareBuffer*>(hnd);
+
+  return (EGLClientBuffer) eglGetNativeClientBufferANDROID(buf);
+#else
   if (img->format == VISIONIMG_FORMAT_RGB24) {
     format = HAL_PIXEL_FORMAT_RGB_888;
   } else {
@@ -90,6 +144,7 @@ EGLClientBuffer visionimg_to_egl(const VisionImg *img, void **pph) {
   // GraphicBuffer is ref counted by EGLClientBuffer(ANativeWindowBuffer), no need and not possible to release.
   *pph = hnd;
   return (EGLClientBuffer) gb->getNativeBuffer();
+#endif
 }
 
 GLuint visionimg_to_gl(const VisionImg *img, EGLImageKHR *pkhr, void **pph) {
@@ -116,7 +171,13 @@ void visionimg_destroy_gl(EGLImageKHR khr, void *ph) {
   EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
   assert(display != EGL_NO_DISPLAY);
   eglDestroyImageKHR(display, khr);
+#ifdef NEOS
+  AHardwareBuffer* buf = reinterpret_cast<AHardwareBuffer*>(ph);
+  AHardwareBuffer_release(buf);
+  buf = nullptr;
+#else
   delete (private_handle_t*)ph;
+#endif
 }
 
 #endif

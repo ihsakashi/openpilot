@@ -4,7 +4,7 @@
 #include "common/visionbuf.h"
 #include "common/glutil.h"
 
-#ifdef QCOM
+#if defined(QCOM) || defined(NEOS)
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #undef Status
@@ -26,6 +26,8 @@ typedef struct VisionImg {
   int bpp;
   size_t size;
 } VisionImg;
+
+typedef void hwbuf_handle;
 
 void visionimg_compute_aligned_width_and_height(int width, int height, int *aligned_w, int *aligned_h);
 VisionImg visionimg_alloc_rgb24(int width, int height, VisionBuf *out_buf);

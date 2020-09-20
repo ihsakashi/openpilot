@@ -15,7 +15,11 @@
 #include "nanovg_gl.h"
 #include "nanovg_gl_utils.h"
 
+#ifdef NEOS
+#include <framebuffer2.h>
+#else
 #include "framebuffer.h"
+#endif
 #include "spinner.h"
 
 #define SPINTEXT_LENGTH 128
@@ -61,7 +65,9 @@ int spin(int argc, char** argv) {
   FramebufferState *fb = framebuffer_init("spinner", 0x00001000, false,
                                           &fb_w, &fb_h);
   assert(fb);
+  #ifndef NEOS
   framebuffer_set_power(fb, HWC_POWER_MODE_NORMAL);
+  #endif
 
   NVGcontext *vg = nvgCreateGLES3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
   assert(vg);

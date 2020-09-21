@@ -8,6 +8,7 @@ from common.hardware_tici import Tici
 from common.hardware_base import HardwareBase
 
 EON = os.path.isfile('/EON')
+NEOS = os.path.isfile('/apex')
 TICI = os.path.isfile('/TICI')
 PC = not (EON or TICI)
 ANDROID = EON
@@ -49,7 +50,7 @@ class Pc(HardwareBase):
     return NetworkStrength.unknown
 
 
-if EON:
+if EON or NEOS:
   HARDWARE = cast(HardwareBase, Android())
 elif TICI:
   HARDWARE = cast(HardwareBase, Tici())

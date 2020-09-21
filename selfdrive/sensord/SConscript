@@ -1,8 +1,12 @@
-Import('env', 'arch', 'common', 'cereal', 'messaging')
+Import('env', 'arch', 'common', 'cereal', 'messaging', 'NEOS')
 if arch == "aarch64":
-  env.Program('_sensord', 'sensors_qcom.cc', LIBS=['hardware', common, cereal, messaging, 'capnp', 'zmq', 'kj'])
+  if NEOS:
+    env.Program('_sensord', 'sensors_neos.cc', LIBS=['hardware', common, cereal, messaging, 'capnp', 'zmq', 'kj'])
+  else:
+    env.Program('_sensord', 'sensors_qcom.cc', LIBS=['hardware', common, cereal, messaging, 'capnp', 'zmq', 'kj'])
   lenv = env.Clone()
-  lenv['LIBPATH'] += ['/system/vendor/lib64']
+  if not NEOS:
+    lenv['LIBPATH'] += ['/system/vendor/lib64']
   lenv.Program('_gpsd', ['gpsd.cc'], LIBS=['hardware', common, 'diag', 'time_genoff', cereal, messaging, 'capnp', 'zmq', 'kj'])
 else:
   sensors = [

@@ -23,64 +23,6 @@ static void set_do_exit(int sig) {
   do_exit = 1;
 }
 
-
-static void* light_sensor_thread(void *args) {
-  set_thread_name("light_sensor");
-
-  int err;
-  UIState *s = (UIState*)args;
-  s->light_sensor = 0.0;
-
-  struct sensors_poll_device_t* device;
-  struct sensors_module_t* module;
-
-  hw_get_module(SENSORS_HARDWARE_MODULE_ID, (hw_module_t const**)&module);
-  sensors_open(&module->common, &device);
-
-  // need to do this
-  struct sensor_t const* list;
-  module->get_sensors_list(module, &list);
-
-  int SENSOR_LIGHT = 7;
-
-  err = device->activate(device, SENSOR_LIGHT, 0);
-  if (err != 0) goto fail;
-  err = device->activate(device, SENSOR_LIGHT, 1);
-  if (err != 0) goto fail;
-
-  device->setDelay(device, SENSOR_LIGHT, ms2ns(100));
-
-  while (!do_exit) {
-    static const size_t numEvents = 1;
-    sensors_event_t buffer[numEvents];
-
-    int n = device->poll(device, buffer, numEvents);
-    if (n < 0) {
-      LOG_100("light_sensor_poll failed: %d", n);
-    }
-    if (n > 0) {
-      s->light_sensor = buffer[0].light;
-    }
-  }
-  sensors_close(device);
-  return NULL;
-
-fail:
-  LOGE("LIGHT SENSOR IS MISSING");
-  s->light_sensor = 255;
-
-  return NULL;
-}
-
-static void ui_set_brightness(UIState *s, int brightness) {
-  static int last_brightness = -1;
-  if (last_brightness != brightness && (s->awake || brightness == 0)) {
-    if (set_brightness(brightness)) {
-      last_brightness = brightness;
-    }
-  }
-}
-
 int event_processing_enabled = -1;
 static void enable_event_processing(bool yes) {
   if (event_processing_enabled != 1 && yes) {
@@ -103,12 +45,10 @@ static void set_awake(UIState *s, bool awake) {
     // TODO: replace command_awake and command_sleep with direct calls to android
     if (awake) {
       LOGW("awake normal");
-      framebuffer_set_power(s->fb, HWC_POWER_MODE_NORMAL);
       enable_event_processing(true);
     } else {
       LOGW("awake off");
       ui_set_brightness(s, 0);
-      framebuffer_set_power(s->fb, HWC_POWER_MODE_OFF);
       enable_event_processing(false);
     }
   }
@@ -176,10 +116,6 @@ int main(int argc, char* argv[]) {
   enable_event_processing(true);
 
   PubMaster *pm = new PubMaster({"offroadLayout"});
-  pthread_t light_sensor_thread_handle;
-  err = pthread_create(&light_sensor_thread_handle, NULL,
-                       light_sensor_thread, s);
-  assert(err == 0);
 
   TouchState touch = {0};
   touch_init(&touch);
@@ -239,11 +175,6 @@ int main(int argc, char* argv[]) {
     // up one notch every 5 m/s
     s->sound->setVolume(fmin(MAX_VOLUME, MIN_VOLUME + s->scene.controls_state.getVEgo() / 5));
 
-    // set brightness
-    float clipped_brightness = fmin(512, (s->light_sensor*brightness_m) + brightness_b);
-    smooth_brightness = fmin(255, clipped_brightness * 0.01 + smooth_brightness * 0.99);
-    ui_set_brightness(s, (int)smooth_brightness);
-
     update_offroad_layout_state(s, pm);
 
     ui_draw(s);
@@ -257,8 +188,6 @@ int main(int argc, char* argv[]) {
 
   set_awake(s, true);
 
-  err = pthread_join(light_sensor_thread_handle, NULL);
-  assert(err == 0);
   delete s->sm;
   delete pm;
   return 0;

@@ -176,12 +176,8 @@ env = Environment(
     "#opendbc/can",
   ],
 
-  if NEOS:
-    CC='aarch64-linux-android-clang'
-    CXX='aarch64-linux-android-clang++'
-  else:
-    CC='clang',
-    CXX='clang++',
+  CC='clang',
+  CXX='clang++',
   LINKFLAGS=ldflags_asan,
 
   RPATH=rpath,

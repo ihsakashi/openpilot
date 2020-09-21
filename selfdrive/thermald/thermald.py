@@ -10,7 +10,7 @@ from smbus2 import SMBus
 import cereal.messaging as messaging
 from cereal import log
 from common.filter_simple import FirstOrderFilter
-from common.hardware import EON, HARDWARE, TICI
+from common.hardware import EON, HARDWARE, NEOS, TICI
 from common.numpy_fast import clip, interp
 from common.params import Params, put_nonblocking
 from common.realtime import DT_TRML, sec_since_boot
@@ -45,9 +45,9 @@ last_eon_fan_val = None
 
 def get_thermal_config():
   # (tz, scale)
-  if EON:
+  if EON and not NEOS:
     return ThermalConfig(cpu=((5, 7, 10, 12), 10), gpu=((16,), 10), mem=(2, 10), bat=(29, 1000), ambient=(25, 1))
-  elif TICI:
+  elif TICI or NEOS:
     return ThermalConfig(cpu=((1, 2, 3, 4, 5, 6, 7, 8), 1000), gpu=((48,49), 1000), mem=(15, 1000), bat=(None, 1), ambient=(70, 1000))
   else:
     return ThermalConfig(cpu=((None,), 1), gpu=((None,), 1), mem=(None, 1), bat=(None, 1), ambient=(None, 1))
@@ -218,14 +218,14 @@ def thermald_thread():
         ignition = health.health.ignitionLine or health.health.ignitionCan
 
       # Setup fan handler on first connect to panda
-      if handle_fan is None and health.health.hwType != log.HealthData.HwType.unknown:
+      if handle_fan is None and health.health.hwType != log.HealthData.HwType.unknown and not NEOS:
         is_uno = health.health.hwType == log.HealthData.HwType.uno
         has_relay = health.health.hwType in [log.HealthData.HwType.blackPanda, log.HealthData.HwType.uno, log.HealthData.HwType.dos]
 
-        if (not EON) or is_uno:
+        if is_uno:
           cloudlog.info("Setting up UNO fan handler")
           handle_fan = handle_fan_uno
-        else:
+        elif EON:
           cloudlog.info("Setting up EON fan handler")
           setup_eon_fan()
           handle_fan = handle_fan_eon
@@ -257,7 +257,7 @@ def thermald_thread():
     msg.thermal.usbOnline = get_usb_present()
 
     # Fake battery levels on uno for frame
-    if (not EON) or is_uno:
+    if (not EON) or is_uno and not NEOS:
       msg.thermal.batteryPercent = 100
       msg.thermal.batteryStatus = "Charging"
       msg.thermal.bat = 0
@@ -400,7 +400,9 @@ def thermald_thread():
       if started_ts is None:
         started_ts = sec_since_boot()
         started_seen = True
-        os.system('echo performance > /sys/class/devfreq/soc:qcom,cpubw/governor')
+        # turn on sustained performance
+        if not NEOS:
+          os.system('echo performance > /sys/class/devfreq/soc:qcom,cpubw/governor')
     else:
       if should_start_prev or (count == 0):
         put_nonblocking("IsOffroad", "1")
@@ -408,7 +410,9 @@ def thermald_thread():
       started_ts = None
       if off_ts is None:
         off_ts = sec_since_boot()
-        os.system('echo powersave > /sys/class/devfreq/soc:qcom,cpubw/governor')
+        # turn on battery saver maybe
+        if not NEOS:
+          os.system('echo powersave > /sys/class/devfreq/soc:qcom,cpubw/governor')
 
     # Offroad power monitoring
     pm.calculate(health)
@@ -419,7 +423,8 @@ def thermald_thread():
     msg.thermal.chargingDisabled = pm.should_disable_charging(health, off_ts)
 
     # Check if we need to shut down
-    if pm.should_shutdown(health, off_ts, started_seen, LEON):
+    # adjust NEOS Thermal HAL and thermal.h ndk
+    if pm.should_shutdown(health, off_ts, started_seen, LEON) and not NEOS:
       cloudlog.info(f"shutting device down, offroad since {off_ts}")
       # TODO: add function for blocking cloudlog instead of sleep
       time.sleep(10)

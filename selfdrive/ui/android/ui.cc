@@ -11,12 +11,6 @@
 
 #include "ui.hpp"
 #include "paint.hpp"
-#include "android/sl_sound.hpp"
-
-// Includes for light sensor
-#include <cutils/properties.h>
-#include <hardware/sensors.h>
-#include <utils/Timers.h>
 
 volatile sig_atomic_t do_exit = 0;
 static void set_do_exit(int sig) {
@@ -48,7 +42,6 @@ static void set_awake(UIState *s, bool awake) {
       enable_event_processing(true);
     } else {
       LOGW("awake off");
-      ui_set_brightness(s, 0);
       enable_event_processing(false);
     }
   }
@@ -105,12 +98,10 @@ int main(int argc, char* argv[]) {
   setpriority(PRIO_PROCESS, 0, -14);
 
   signal(SIGINT, (sighandler_t)set_do_exit);
-  SLSound sound;
 
   UIState uistate = {};
   UIState *s = &uistate;
   ui_init(s);
-  s->sound = &sound;
 
   set_awake(s, true);
   enable_event_processing(true);
@@ -136,7 +127,6 @@ int main(int argc, char* argv[]) {
 
   const int MIN_VOLUME = LEON ? 12 : 9;
   const int MAX_VOLUME = LEON ? 15 : 12;
-  s->sound->setVolume(MIN_VOLUME);
 
   while (!do_exit) {
     if (!s->started || !s->vision_connected) {
@@ -173,7 +163,6 @@ int main(int argc, char* argv[]) {
     }
 
     // up one notch every 5 m/s
-    s->sound->setVolume(fmin(MAX_VOLUME, MIN_VOLUME + s->scene.controls_state.getVEgo() / 5));
 
     update_offroad_layout_state(s, pm);
 

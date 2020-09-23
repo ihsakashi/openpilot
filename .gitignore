@@ -49,8 +49,6 @@ selfdrive/modeld/_modeld
 selfdrive/modeld/_dmonitoringmodeld
 /src/
 
-!phonelibs/snpe/neos
-
 one
 openpilot
 notebooks

@@ -433,10 +433,12 @@ phonelibs/libyuv/lib/**
 
 phonelibs/snpe/include/**
 phonelibs/snpe/aarch64**
+phonelibs/snpe/neos/**
 
 phonelibs/android_frameworks_native/**
 phonelibs/android_hardware_libhardware/**
 phonelibs/android_system_core/**
+phonelibs/neos/include/**
 
 installer/updater/updater
 installer/updater/updater.cc

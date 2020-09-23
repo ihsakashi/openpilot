@@ -24,7 +24,7 @@ if arch == "aarch64":
     files += [
       'touch.c',
     ]
-    _gpu_libs = ['nativewindow']
+    _gpu_libs = ['EGL', 'nativewindow']
   else:
     files += [
       'framebuffer.cc',

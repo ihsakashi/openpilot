@@ -20,7 +20,7 @@ typedef struct CameraState {
   float cur_gain_frac;
 
   // camera2ndk id
-  const char camera2_id;
+  char camera2_id;
 
   // device
   ACameraMetadata *metadata;
@@ -38,7 +38,11 @@ typedef struct CameraState {
   // image reader and window
   AImageReader *reader;
   native_handle_t *window;
-  AImageReader_ImageListener *readerListener;
+  AImageReader_ImageListener *readerCb;
+
+  // callbacks
+  ACameraDevice_StateCallbacks deviceCb;
+  ACameraCaptureSession_stateCallbacks sessionCb;
 
   mat3 transform;
 
@@ -48,11 +52,14 @@ typedef struct CameraState {
 typedef struct MultiCameraState {
   int ispif_fd;
 
-  ACameraManager *manager;
+  ACameraManager *manager; // how to let devices use
   ACameraIdList *idList;
 
   CameraState rear;
   CameraState front;
+
+  SubMaster *sm;
+  PubMaster *pm;
 } MultiCameraState;
 
 void cameras_init(MultiCameraState *s, cl_device_id device_id, cl_context ctx);

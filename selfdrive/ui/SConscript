@@ -6,21 +6,21 @@ libs = [common, 'zmq', 'czmq', 'capnp', 'kj', 'm', cereal, messaging, gpucommon,
 
 if qt_env is None:
   if NEOS:
-    libs += ['EGL', 'GLESv3', 'c++_shared', 'framebuffer2', 'android', 'OpenCL', 'OpenSLES']
-    forcelink = ['/system/lib64/liblzma.so']
+    libs += ['EGL', 'GLESv3', 'c++_shared', 'framebuffer2', 'OpenCL']
+    forcelib = File('/system/lib64/liblzma.so')
     # OpenCL is a vendor lib
     # Does this fix preload issue?
     # Think main scons does against /system/lib64 also, check
     linkflags = ['-Wl,-rpath=/vendor/lib64,-rpath=/data/data/com.termux/files/usr/lib']
   else:
     libs += ['EGL', 'GLESv3', 'gnustl_shared', 'log', 'utils', 'gui', 'hardware', 'ui', 'CB', 'gsl', 'adreno_utils', 'OpenSLES', 'cutils', 'uuid', 'OpenCL']
-    forcelinks = []
+    forcelib = []
     linkflags = ['-Wl,-rpath=/system/lib64,-rpath=/system/comma/usr/lib']
 
-  src += ["android/ui.cc", "android/sl_sound.cc"]
+  src += ["android/ui.cc"]
   env.Program('_ui', src,
     LINKFLAGS=linkflags,
-    FORCELINKS=forcelinks,
+    FORCELIB=forcelib,
     LIBS=libs)
 
 else:

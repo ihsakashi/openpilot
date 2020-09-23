@@ -31,7 +31,6 @@ volatile sig_atomic_t do_exit = 0;
 volatile sig_atomic_t re_init_sensors = 0;
 
 namespace {
-
 void set_do_exit(int sig) {
   do_exit = 1;
 }
@@ -47,13 +46,13 @@ void sensor_loop() {
     PubMaster pm({"sensorEvents"});
 
     // sensor manager
-    ASensorManager *manager = ASensorManager_getInstance();
+    ASensorManager *manager = ASensorManager_getInstanceForPackage("sensord");
     assert(manager != NULL);
 
     // list
     ASensorList list;
     int count = ASensorManager_getSensorList(manager, &list);
-    assert(count != NULL);
+    assert(count != 0);
     LOG("%d sensors found", count);
 
     if (getenv("SENSOR_TEST")) {
@@ -62,7 +61,10 @@ void sensor_loop() {
 
     // specs
     for (int i = 0; i < count; i++) {
-      LOGD("sensor %4d: %4d %60s  %d-%ld us", i, ASensor_getHandle(list[i]), ASensor_getName(list[i]), ASensor_getMinDelay(list[i]), ASensor_getMaxDelay(list[i]);
+      LOGD("handle: %s\n", ASensor_getHandle(list[i]));
+      LOGD("name: %s\n", ASensor_getName(list[i]));
+      LOGD("min delay: %d\n", ASensor_getMinDelay(list[i]));
+      LOGD("direct channel support: %d\n", ASensor_isDirectChannelTypeSupported(list[i]));
     }
 
     // types
@@ -91,7 +93,7 @@ void sensor_loop() {
     int looperId = 1;
     ALooper *looper;
     looper = ALooper_prepare(ALOOPER_PREPARE_ALLOW_NON_CALLBACKS);
-    assert(looper != NULL)
+    assert(looper != NULL);
     ASensorEventQueue* event_queue = ASensorManager_createEventQueue(manager, looper, looperId, NULL, NULL);
     assert(event_queue != NULL);
 
@@ -146,46 +148,46 @@ void sensor_loop() {
 
         // give data
         switch (data.type) {
-          case SENSOR_TYPE_ACCELEROMETER: {
+          case ASENSOR_TYPE_ACCELEROMETER: {
             auto svec = log_event.initAcceleration();
             kj::ArrayPtr<const float> vs(&data.acceleration.v[0], 3);
             svec.setV(vs);
             svec.setStatus(data.acceleration.status);
             break;
           }
-          case SENSOR_TYPE_MAGNETIC_FIELD_UNCALIBRATED: {
+          case ASENSOR_TYPE_MAGNETIC_FIELD_UNCALIBRATED: {
             auto svec = log_event.initMagneticUncalibrated();
             // assuming the uncalib and bias floats are contiguous in memory
             kj::ArrayPtr<const float> vs(&data.uncalibrated_magnetic.uncalib[0], 6);
             svec.setV(vs);
             break;
           }
-          case SENSOR_TYPE_MAGNETIC_FIELD: {
+          case ASENSOR_TYPE_MAGNETIC_FIELD: {
             auto svec = log_event.initMagnetic();
             kj::ArrayPtr<const float> vs(&data.magnetic.v[0], 3);
             svec.setV(vs);
             svec.setStatus(data.magnetic.status);
             break;
           }
-          case SENSOR_TYPE_GYROSCOPE_UNCALIBRATED: {
+          case ASENSOR_TYPE_GYROSCOPE_UNCALIBRATED: {
             auto svec = log_event.initGyroUncalibrated();
             // assuming the uncalib and bias floats are contiguous in memory
             kj::ArrayPtr<const float> vs(&data.uncalibrated_gyro.uncalib[0], 6);
             svec.setV(vs);
             break;
           }
-          case SENSOR_TYPE_GYROSCOPE: {
+          case ASENSOR_TYPE_GYROSCOPE: {
             auto svec = log_event.initGyro();
             kj::ArrayPtr<const float> vs(&data.gyro.v[0], 3);
             svec.setV(vs);
             svec.setStatus(data.gyro.status);
             break;
           }
-          case SENSOR_TYPE_PROXIMITY: {
+          case ASENSOR_TYPE_PROXIMITY: {
             log_event.setProximity(data.distance);
             break;
           }
-          case SENSOR_TYPE_LIGHT: {
+          case ASENSOR_TYPE_LIGHT: {
             log_event.setLight(data.light);
             break;
           }
@@ -197,10 +199,11 @@ void sensor_loop() {
     // send results
     pm.send("sensorEvents", msg);
 
-    if (re_init_sensors){
+    if (re_init_sensors) {
       LOGE("Resetting sensors");
       re_init_sensors = false;
       break;
+    }
     }
   }
   

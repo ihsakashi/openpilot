@@ -7,7 +7,7 @@ if arch == "aarch64":
   lenv = env.Clone()
   if not NEOS:
     lenv['LIBPATH'] += ['/system/vendor/lib64']
-  lenv.Program('_gpsd', ['gpsd.cc'], LIBS=['hardware', common, 'diag', 'time_genoff', cereal, messaging, 'capnp', 'zmq', 'kj'])
+    lenv.Program('_gpsd', ['gpsd.cc'], LIBS=['hardware', common, 'diag', 'time_genoff', cereal, messaging, 'capnp', 'zmq', 'kj'])
 else:
   sensors = [
     'sensors/file_sensor.cc',

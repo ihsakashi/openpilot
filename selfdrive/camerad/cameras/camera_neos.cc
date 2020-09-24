@@ -12,6 +12,11 @@
 #include "common/swaglog.h"
 #include "common/params.h"
 
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+
 #include <camera/NdkCameraError.h>
 #include <camera/NdkCameraManager.h>
 #include <camera/NdkCameraDevice.h>
@@ -48,6 +53,44 @@ static void session_onCaptureStarted(void* context, ACameraCaptureSession* sessi
 static void session_onCaptureCompleted(void* context, ACameraCaptureSession* session, ACaptureRequest* /* request */, const ACameraMetadata /* result */) {}
 
 static void session_onCaptureFailed(void* context, ACameraCaptureSession* session, ACaptureRequest* /* request */, const ACameraMetadata /* result */) {}
+
+static void reader_onImageAvaliable(void *context, AImageReader *reader) {
+    CameraState *s = context;
+    media_status_t media_status;
+
+    AImage* img = nullptr;
+    {
+        std::unique_lock<std::mutex> lock(s->mutex);
+
+        auto img_deleter = [this](AImage* img) {
+            AImage_delete(img);
+        }
+
+        // get image
+        media_status = AImageReader_acquireLatestImage(reader, &img);
+        if (media_status != AMEDIA_OK) {
+            if (media_status ==  AMEDIA_IMGREADER_NO_BUFFER_AVAILABLE) {
+                LOGE("Callback: frame was dropped from buffer");
+            } else {
+                LOGE("Callback: couldn't get frame"); //todo give error code
+            }
+            // todo on error
+        }
+        // automatically rid images
+        std::shared_ptr<AImage> image = std::shared_ptr<AImage>(img, img_deleter);
+
+        // format
+        int32_t format = -1;
+        AImage_getFormat(img, &format);
+        assert(format == s->format);
+
+        // planes
+
+
+
+    }
+
+}
 
 void camera_open(CameraState *s, ACameraManager* manager) {
     camera_status_t camera_status;
@@ -146,7 +189,8 @@ void camera_init(CameraState *s, ACameraManager* manager, char camera2_id, ACame
 
     // this gives us angle to be upright
     ACameraMetadata_const_entry orientation;
-    ACameraMetadata_getConstEntry(metadata, ACAMERA_SENSOR_ORIENTATION, &orientation);
+    camera_status = ACameraMetadata_getConstEntry(metadata, ACAMERA_SENSOR_ORIENTATION, &orientation);
+    assert(camera_status == ACAMERA_OK);
     int32_t angle = orientation.data.i32[0];
     LOG("camera angle is %d", angle);
 
@@ -159,10 +203,26 @@ void camera_init(CameraState *s, ACameraManager* manager, char camera2_id, ACame
         0.0, 0.0, 1.0,
     }};
 
+    // camera intrinsics
+    ACameraMetadata_const_entry intrinsic;
+    camera_status = ACameraMetadata_getConstEntry(metadata, ACAMERA_LENS_INTRINSIC_CALIBRATION, &focal);
+    assert(camera_status == ACAMERA_OK);
+    s->ts_a[9] = {  intrinsic.data.f[0], intrinsic.data.f[4], intrinsic.data.f[2],
+                    0, intrinsic.data.f[1], intrinsic.data.f[3]
+                    0, 0, 1 };
+
+    /*
+    // lens distortion
+    ACameraMetadata_const_entry distortion;
+    camera_status = ACameraMetadata_getConstEntry(metadata, ACAMERA_LENS_DISTORTION, &distortion);
+    //assert(camera_status == ACAMERA_OK);
+    */
+
     // fps range
 	ACameraMetadata_const_entry fpsranges;
-	ACameraMetadata_getConstEntry(cameraMetadata, ACAMERACONTROL_AE_AVAILABLE_TARGET_FPS_RANGES, &fpsranges);
-	for (int i = 0; i < fpsranges.count; i += 2) {
+	camera_status = ACameraMetadata_getConstEntry(cameraMetadata, ACAMERACONTROL_AE_AVAILABLE_TARGET_FPS_RANGES, &fpsranges);
+    assert(camera_status == ACAMERA_OK);
+    for (int i = 0; i < fpsranges.count; i += 2) {
         int32_t fpsmin = supportedFpsRanges.data.i32[i];
 		int32_t fpsmax = supportedFpsRanges.data.i32[i + 1];
         LOG("camera supported FPS range: [%d-%d]", fpsmin, fpsmax);
@@ -173,7 +233,8 @@ void camera_init(CameraState *s, ACameraManager* manager, char camera2_id, ACame
     s->format = imageFormat;
     // find res
     ACameraMetadata_const_entry scaler;
-    ACameraMetadata_getConstEntry(cameraMetadata, ACAMERA_SCALER_AVAILABLE_STREAM_CONFIGURATIONS, &scaler);
+    camera_status = ACameraMetadata_getConstEntry(cameraMetadata, ACAMERA_SCALER_AVAILABLE_STREAM_CONFIGURATIONS, &scaler);
+    assert(camera_status == ACAMERA_OK);
     for (int = 0; i  scaler.count; i += 4) {
         int32_t input = scaler.data.i32[i + 3];
         if (input)

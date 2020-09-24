@@ -40,10 +40,13 @@ typedef struct CameraState {
   native_handle_t *window;
   AImageReader_ImageListener *readerCb;
 
+  std::mutex mutex;
+
   // callbacks
   ACameraDevice_StateCallbacks deviceCb;
   ACameraCaptureSession_stateCallbacks sessionCb;
 
+  float ts_a[9];
   mat3 transform;
 
   CameraBuf buf;

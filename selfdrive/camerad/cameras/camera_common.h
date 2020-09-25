@@ -85,7 +85,6 @@ public:
   FrameMetadata cur_frame_data;
   VisionBuf *cur_rgb_buf;
 
-
   std::unique_ptr<VisionBuf[]> camera_bufs;
   std::unique_ptr<FrameMetadata[]> camera_bufs_metadata;
   TBuffer camera_tb, ui_tb;

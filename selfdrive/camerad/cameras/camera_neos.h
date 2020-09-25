@@ -8,7 +8,25 @@
 #include <media/NdkImageReader.h>
 #include "native_handle.h"
 
+#include <opencv2/core.hpp>
+
 #include "camera_common.h"
+
+typedef struct ImageState {
+  // data
+  AImage *out;
+  cv::Size size;
+  cv::Mat transform;
+  cv::Mat transformed;
+  int32_t format;
+  int64_t timestamp;
+  float ts_after[9];
+
+  // sync
+  bool imgCb_ready;
+  std::condition_variable imgCb_condition;
+  std::mutex imgCb_mutex;
+}
 
 typedef struct CameraState {
   int camera_id;
@@ -16,6 +34,8 @@ typedef struct CameraState {
 
   int fps;
   int format;
+  int width;
+  int height;
   float digital_gain;
   float cur_gain_frac;
 
@@ -40,13 +60,15 @@ typedef struct CameraState {
   native_handle_t *window;
   AImageReader_ImageListener *readerCb;
 
-  std::mutex mutex;
+  ImageState is;
 
   // callbacks
   ACameraDevice_StateCallbacks deviceCb;
   ACameraCaptureSession_stateCallbacks sessionCb;
 
-  float ts_a[9];
+  // warp perspective
+  float ts_before[9];
+
   mat3 transform;
 
   CameraBuf buf;

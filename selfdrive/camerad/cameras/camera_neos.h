@@ -18,7 +18,7 @@ typedef struct ImageState {
   cv::Size size;
   cv::Mat transform;
   cv::Mat transformed;
-  int32_t format;
+  int format;
   int64_t timestamp;
   float ts_after[9];
 

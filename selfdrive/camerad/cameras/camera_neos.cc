@@ -41,21 +41,21 @@ namespace {
 static constexpr int imageFormat = AIMAGE_FORMAT_YUV_420_888 // Always supported
 static constexpr int reader_onImageAvailableWait = 100 * 1000;
 
-static void device_onDisconnected(void* /* context */, ACameraDevice* device) {}
+//static void device_onDisconnected(void* /* context */, ACameraDevice* device) {}
 
-static void device_onError(void* /* context */, ACameraDevice* device, int err) {}
+//static void device_onError(void* /* context */, ACameraDevice* device, int err) {}
 
-static void session_onClosed(void* context, ACameraCaptureSession* session) {}
+//static void session_onClosed(void* context, ACameraCaptureSession* session) {}
 
-static void session_onReady(void* context, ACameraCaptureSession* session) {}
+//static void session_onReady(void* context, ACameraCaptureSession* session) {}
 
-static void session_onActive(void* context, ACameraCaptureSession* session) {}
+//static void session_onActive(void* context, ACameraCaptureSession* session) {}
 
-static void session_onCaptureStarted(void* context, ACameraCaptureSession* session, ACaptureRequest* /* request */, const ACameraMetadata /* result */) {}
+//static void session_onCaptureStarted(void* context, ACameraCaptureSession* session, ACaptureRequest* /* request */, const ACameraMetadata /* result */) {}
 
-static void session_onCaptureCompleted(void* context, ACameraCaptureSession* session, ACaptureRequest* /* request */, const ACameraMetadata /* result */) {}
+//static void session_onCaptureCompleted(void* context, ACameraCaptureSession* session, ACaptureRequest* /* request */, const ACameraMetadata /* result */) {}
 
-static void session_onCaptureFailed(void* context, ACameraCaptureSession* session, ACaptureRequest* /* request */, const ACameraMetadata /* result */) {}
+//static void session_onCaptureFailed(void* context, ACameraCaptureSession* session, ACaptureRequest* /* request */, const ACameraMetadata /* result */) {}
 
 void reader_onImageAvailable(void* context, AImageReader *reader) {
     ImageState *is = context->is;
@@ -80,7 +80,7 @@ void reader_onImageAvailable(void* context, AImageReader *reader) {
         // goto err
     }
 
-    // image to data
+    // image to data buffer
     int32_t srcFormat = -1;
     AImage_getFormat(is->out, &srcFormat);
     if (srcFormat != AIMAGE_FORMAT_YUV_420_888) {
@@ -111,13 +111,13 @@ void reader_onImageAvailable(void* context, AImageReader *reader) {
     buffer.insert(buffer.end(), yPixel, yPixel + yLen);
     buffer.insert(buffer.end(), uPixel, uPixel + yLen / 2);
 
-    // data to mat
+    // data buffer to mat
     cv::Mat frame;
-    cv::Mat yuv(is->height * 3/2, is->width, CV_8UC1, buffer.data);
+    cv::Mat yuv(is->size.height, is->size.width, CV_8UC1, buffer.data);
     
-    if ( (uvPixelStride == 2) && (vPixel == uPixel + 1) && (yLen == frameWidth * frameHeight) && (uLen == ((yLen / 2) - 1)) && (vLen == uLen) ) {      
+    if ( (uvPixelStride == 2) && (vPixel == uPixel + 1) && (yLen == is->size.width * is->size.height) && (uLen == ((yLen / 2) - 1)) && (vLen == uLen) ) {
         cv::cvtColor(yuv, frame, cv::COLOR_YUV2BGR_YV12);
-    } else if ( (uvPixelStride == 1) && (vPixel = uPixel + uLen) && (yLen == frameWidth * frameHeight) && (uLen == yLen / 4) && (vLen == uLen) ) {
+    } else if ( (uvPixelStride == 1) && (vPixel = uPixel + uLen) && (yLen == is->size.width * is->size.height) && (uLen == yLen / 4) && (vLen == uLen) ) {
         cv::cvtColor(yuv, frame, cv::COLOR_YUV2BGR_NV21);
     } else {
         LOGE("Unsupported format");
@@ -144,8 +144,8 @@ void camera_open(CameraState *s, ACameraManager* manager) {
 
     // set our callbacks
     s->deviceCb.context = s;
-    s->deviceCb.onDisconnected = device_onDisconnected();
-    s->deviceCb.onError = device_onError();
+    s->deviceCb.onDisconnected = nullptr;
+    s->deviceCb.onError = nullptr;
 
     // open device with manager
     camera_status = ACameraManager_openCamera(manager, s->camera2_id, &s->deviceCb, &s->device);
@@ -154,8 +154,8 @@ void camera_open(CameraState *s, ACameraManager* manager) {
 
     // set our callbacks
     s->sessionCb.context = s;
-    s->sessionCb.onCaptureCompleted = session_onCaptureCompleted;
-    s->sessionCb.onCaptureFailed = session_onCaptureFailed;
+    s->sessionCb.onCaptureCompleted = nullptr;
+    s->sessionCb.onCaptureFailed = nullptr;
 
     // session and window
     camera_status = ACaptureSessionOutputContainer_create(&s->outputs);
@@ -212,7 +212,7 @@ void reader_init(CameraState *s) {
     assert(s->reader == nullptr);
     
     // we have our own native handler we could use now! vendor ver
-    media_status = AImageReader_newWithUsage(s->is.width, s->is.height, s->is.format, AHARDWAREBUFFER_USAGE_CPU_READ_OFTEN, 2 /* buffer */, &s->reader);
+    media_status = AImageReader_newWithUsage(s->width, s->height, s->format, AHARDWAREBUFFER_USAGE_CPU_READ_OFTEN, 2 /* buffer */, &s->reader);
     assert(media_status == AMEDIA_OK);
     media_status = AImageReader_setImageListener(s->reader, &s->readerCb);
     assert(media_status == AMEDIA_OK);
@@ -291,8 +291,8 @@ void camera_init(CameraState *s, ACameraManager* manager, char camera2_id, ACame
             LOG("camera has available size of w %d, h %d for format %d", width, height, format);
             if (width == DESIRED_WIDTH && height = DESIRED_HEIGHT) {
                 LOG("desired res found");
-                s->is.width = width;
-                s->is.height = height;
+                s->width = width;
+                s->height = height;
             }
         }
     }
@@ -300,19 +300,34 @@ void camera_init(CameraState *s, ACameraManager* manager, char camera2_id, ACame
     s->buf.init(device_id, ctx, s, FRAME_BUF_COUNT "frame");
 }
 
-void camera_run(CameraState *s) {
+static void* rear_thread(void *arg) {
     int err;
+        
+    set_thread_name("neos_thread_rear");
+    CameraState* s = (CameraState*)arg;
     ImageState *is = s->is;
 
-    // calcule transformation
-
     // calculate size
+    s->ci.frame_height = s->height * 3/2;
+    s->ci.frame_width = s->width;
+    is->size.height = s->ci.frame_height;
+    is->size.width = s->ci.frame_width;
 
-    // update camera info
+    // calcule transformation
+    is->transform = cv::Mat(3, 3, CV_32F, s->ts_before);
+    
+    // check camera
+    if (s->reader == nullptr && s->session == nullptr) {
+        err = 1;
+    }
+
+    // init camera control
 
     // control camera
     int frame_id = 0;
+    TBuffer* tb = &s->buf.camera_tb;
     is->imgCb_ready = false;
+
     while (!do_exit) {
         // wait for callback
         std::unique_lock<std::mutex> lock(is->imgCb_lock);
@@ -349,12 +364,77 @@ void camera_run(CameraState *s) {
         tbuffer_dispatch(tb, buf_idx);
 
         frame_id += 1;
-        transformed_mat.release;
+        transformed.release;
+    }
+    return NULL;
+}
+
+void front_thread(CameraState *s) {
+    int err;
+    ImageState *is = s->is;
+
+    // calculate size
+    s->ci.frame_height = s->height * 3/2;
+    s->ci.frame_width = s->width;
+    is->size.height = s->ci.frame_height;
+    is->size.width = s->ci.frame_width;
+
+    // calcule transformation
+    is->transform = cv::Mat(3, 3, CV_32F, s->ts_before);
+    
+    // check camera
+    if (s->reader == nullptr && s->session == nullptr) {
+        err = 1;
     }
 
-    // release stuff
+    // init camera control
 
+    // control camera
+    int frame_id = 0;
+    TBuffer* tb = &s->buf.camera_tb;
+    is->imgCb_ready = false;
+
+    while (!do_exit) {
+        // wait for callback
+        std::unique_lock<std::mutex> lock(is->imgCb_lock);
+        is->imgCb_condition.wait_for(lock, std::chrono::microseconds(reader_onImageAvailableWait),
+                                [this]{ return is->imgCb_ready;});
+        if (is->imgCb_ready == false) {
+            LOGE("callback timed out!");
+            // blah blah skipped frame handling
+            continue;
+        }
+
+        int transformed_size = is->transformed.total() * is->transformed.elemSize();
+
+        const int buf_idx = tbuffer_select(tb);
+        s->buf.camera_bufs_metadata[buf_idx] = {
+            //.timestamp_eof = is->timestamp; does pipeline like this timestamp?
+            .frame_id = frame_id,
+        };
+
+        cl_command_queue q = s->buf.camera_bufs[buf_idx].copy_q;
+        cl_mem yuv_cl = s->buf.camera_bufs[buf_idx].buf_cl;
+        cl_event map_event;
+        void *yuv_buf = (void *)clEnqueueMapBuffer(q, yuv_cl, CL_TRUE,
+                                                    CL_MAP_WRITE, 0, transformed_size,
+                                                    0, NULL, &map_event, &err);
+        assert(err == 0);
+        clWaitForEvents(1, &map_event);
+        clReleaseEvent(map_event);
+        memcpy(yuv_buf, is->transformed.data, transformed_size);
+
+        clEnqueueUnmapMemObject(q, yuv_cl, yuv_buf, 0, NULL, &map_event);
+        clWaitForEvents(1, &map_event);
+        clReleaseEvent(map_event);
+        tbuffer_dispatch(tb, buf_idx);
+
+        frame_id += 1;
+        transformed.release;
+    }
+    return;
 }
+
 } // namespace
 
 CameraInfo cameras_supported[CAMERA_ID_MAX] = {
@@ -426,11 +506,6 @@ void cameras_open(MultiCameraState *s) {
     camera_open(&s->front, s->manager);
 }
 
-void camera_process_front(MultiCameraState *s, CameraState *c, int cnt) {}
-
-void camera_process_rear(MultiCameraState *s, CameraState *c, int cnt) {}
-
-
 void cameras_close(MultiCameraState *s) {
     LOG("-- closing cameras")
     camera_close(&s->rear);
@@ -446,17 +521,33 @@ void cameras_close(MultiCameraState *s) {
     delete s->pm;
 }
 
+void camera_process_front(MultiCameraState *s, CameraState *c, int cnt) {
+  MessageBuilder msg;
+  auto framed = msg.initEvent().initFrontFrame();
+  framed.setFrameType(cereal::FrameData::FrameType::FRONT);
+  fill_frame_data(framed, c->buf.cur_frame_data, cnt);
+  s->pm->send("frontFrame", msg);
+}
+
+void camera_process_rear(MultiCameraState *s, CameraState *c, int cnt) {
+  const CameraBuf *b = &c->buf;
+  MessageBuilder msg;
+  auto framed = msg.initEvent().initFrame();
+  fill_frame_data(framed, b->cur_frame_data, cnt);
+  framed.setImage(kj::arrayPtr((const uint8_t *)b->yuv_ion[b->cur_yuv_idx].addr, b->yuv_buf_size));
+  framed.setTransform(kj::ArrayPtr<const float>(&b->yuv_transform.v[0], 9));
+  s->pm->send("frame", msg);
+}
+
 void cameras_run(MultiCameraState *s) {
     std::vector<std::thread> threads;
     threads.push_back(start_process_thread(s, "processing", &s->rear, 51, camera_process_frame));
     threads.push_back(start_process_thread(s, "frontview", &s->front, 51, camera_process_front));
 
-    // these are just managing callback
-    while (!do_exit) {
-        camera_run(&s->rear);
-        camera_run(&s->front);
-    }
-
+    std::thread t_rear = std::thread(rear_thread, &s->rear);
+    set_thread_name("webcam_thread");
+    front_thread(&s->front);
+    t_rear.join();
     cameras_close(s);
 
     for (auto &t : threads) t.join();

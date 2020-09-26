@@ -67,6 +67,7 @@ if arch == "aarch64" or arch == "larch64":
       "#phonelibs/snpe/neos",
       "#phonelibs/libyuv/lib",
       "/system/lib64",
+      "/apex/com.android.runtime/lib64"
       "/vendor/lib64"
     ]
     cflags = ["-DNEOS", "--target=aarch64-linux-android29"]

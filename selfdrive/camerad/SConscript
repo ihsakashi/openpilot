@@ -4,7 +4,7 @@ libs = ['m', 'pthread', common, 'jpeg', 'OpenCL', cereal, messaging, 'czmq', 'zm
 
 if arch == "aarch64" and not webcam:
   if NEOS:
-    libs += ['camera2ndk_vendor', 'mediandk', 'nativewindow', 'log'. 'cutils']
+    libs += ['camera2ndk_vendor', 'mediandk', 'nativewindow', 'androidicu', 'icuuc', 'icui18n']
     cameras = ['cameras/camera_neos.cc']
   else:
     libs += ['gsl', 'CB', 'adreno_utils', 'EGL', 'GLESv3', 'cutils', 'ui']

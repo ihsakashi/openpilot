@@ -41,9 +41,14 @@ if arch == "aarch64" or arch == "larch64":
     lenv["ANDROID_DATA"] = os.environ['ANDROID_DATA']
     lenv["ANDROID_ROOT"] = os.environ['ANDROID_ROOT']
 
-  cpppath = [
-    "#phonelibs/opencl/include",
-  ]
+  if NEOS:
+    cpppath = [
+      "#phonelibs/opencl/neos/include",
+    ]
+  else:
+    cpppath = [
+      "#phonelibs/opencl/include",
+    ]
 
   libpath = [
     "/usr/lib",

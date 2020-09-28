@@ -7,6 +7,8 @@ if arch == "aarch64" and not webcam:
     libs += ['opencv_core', 'opencv_highgui', 'opencv_imgproc', 'opencv_videoio']
     libs += ['camera2ndk_vendor', 'mediandk', 'nativewindow', 'androidicu', 'icuuc', 'icui18n']
     cameras = ['cameras/camera_neos.cc']
+    env = env.Clone()
+    env.Append=(CPPPATH = '/data/data/com.termux/files/usr/include/opencv4')
   else:
     libs += ['gsl', 'CB', 'adreno_utils', 'EGL', 'GLESv3', 'cutils', 'ui']
     if QCOM_REPLAY:
